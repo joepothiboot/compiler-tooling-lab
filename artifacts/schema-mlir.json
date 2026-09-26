@@ -1,0 +1,342 @@
+{
+  "project": "schema-mlir",
+  "commit": "ed3ccd26398479fb8b0357f3fdaa73f41667d5c6",
+  "capture": {
+    "capturedAt": "2026-09-26T12:26:50.834Z",
+    "host": "darwin-arm64",
+    "toolchain": {
+      "llvm": "23.1.1",
+      "python": "3.11.7",
+      "node": "v22.6.0",
+      "rustc": "1.91.1"
+    }
+  },
+  "artifacts": [
+    {
+      "id": "schema-tests",
+      "kind": "test-run",
+      "title": "lit regression suite (check-schema)",
+      "runner": "lit",
+      "passed": 3,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "log": "PASS: JSON-SCHEMA-MLIR :: Dialect/Schema/schema-canonicalize.mlir (1 of 3)\nPASS: JSON-SCHEMA-MLIR :: Dialect/Schema/ops.mlir (2 of 3)\nPASS: JSON-SCHEMA-MLIR :: Lowering/lower-to-std.mlir (3 of 3)\n\nTotal Discovered Tests: 3\n  Passed: 3 (100.00%)",
+      "provenance": {
+        "mode": "captured",
+        "command": "lit -v build/test"
+      }
+    },
+    {
+      "id": "schema-input",
+      "kind": "ir-snapshot",
+      "title": "@fuse_constraint_tree (from the canonicalization tests)",
+      "stage": "schema",
+      "text": "func.func @fuse_constraint_tree(%doc: !schema.value) -> i1 {\n  %a = schema.validate_string %doc { min_length = 5 : i64 } : !schema.value\n  %b = schema.validate_string %doc { max_length = 32 : i64 } : !schema.value\n  %c = schema.validate_string %doc { min_length = 2 : i64, pattern = \"^[a-z]+$\" } : !schema.value\n  %ab  = arith.andi %a, %b : i1\n  %abc = arith.andi %ab, %c : i1\n  return %abc : i1\n}",
+      "location": {
+        "file": "test/Dialect/Schema/schema-canonicalize.mlir",
+        "line": 29
+      },
+      "provenance": {
+        "mode": "static",
+        "path": "test/Dialect/Schema/schema-canonicalize.mlir#L29-L36"
+      }
+    },
+    {
+      "id": "schema-ir-0-parsed",
+      "kind": "ir-snapshot",
+      "title": "Input as parsed and printed by schema-opt",
+      "stage": "schema",
+      "text": "module {\n  func.func @fuse_constraint_tree(%arg0: !schema.value) -> i1 {\n    %0 = schema.validate_string %arg0 {min_length = 5 : i64} : !schema.value\n    %1 = schema.validate_string %arg0 {max_length = 32 : i64} : !schema.value\n    %2 = schema.validate_string %arg0 {min_length = 2 : i64, pattern = \"^[a-z]+$\"} : !schema.value\n    %3 = arith.andi %0, %1 : i1\n    %4 = arith.andi %3, %2 : i1\n    return %4 : i1\n  }\n}",
+      "provenance": {
+        "mode": "captured",
+        "command": "schema-opt fuse_constraint_tree.mlir"
+      }
+    },
+    {
+      "id": "schema-pass-1-canonicalizerpass",
+      "kind": "pass-event",
+      "title": "CanonicalizerPass (canonicalize)",
+      "pass": "CanonicalizerPass (canonicalize)",
+      "index": 1,
+      "changed": false,
+      "before": "schema-ir-0-parsed",
+      "after": "schema-ir-0-parsed",
+      "provenance": {
+        "mode": "captured",
+        "command": "schema-opt fuse_constraint_tree.mlir --schema-to-std-pipeline --mlir-print-ir-after-all --mlir-print-ir-module-scope --mlir-disable-threading -o /dev/null"
+      }
+    },
+    {
+      "id": "schema-ir-2-schemacanonicalizerpass",
+      "kind": "ir-snapshot",
+      "title": "IR after SchemaCanonicalizerPass (schema-canonicalize)",
+      "stage": "schema",
+      "text": "module {\n  func.func @fuse_constraint_tree(%arg0: !schema.value) -> i1 {\n    %0 = schema.validate_string %arg0 {max_length = 32 : i64, min_length = 5 : i64, pattern = \"^[a-z]+$\"} : !schema.value\n    return %0 : i1\n  }\n}",
+      "provenance": {
+        "mode": "captured",
+        "command": "schema-opt fuse_constraint_tree.mlir --schema-to-std-pipeline --mlir-print-ir-after-all --mlir-print-ir-module-scope --mlir-disable-threading -o /dev/null"
+      }
+    },
+    {
+      "id": "schema-pass-2-schemacanonicalizerpass",
+      "kind": "pass-event",
+      "title": "SchemaCanonicalizerPass (schema-canonicalize)",
+      "pass": "SchemaCanonicalizerPass (schema-canonicalize)",
+      "index": 2,
+      "changed": true,
+      "before": "schema-ir-0-parsed",
+      "after": "schema-ir-2-schemacanonicalizerpass",
+      "provenance": {
+        "mode": "captured",
+        "command": "schema-opt fuse_constraint_tree.mlir --schema-to-std-pipeline --mlir-print-ir-after-all --mlir-print-ir-module-scope --mlir-disable-threading -o /dev/null"
+      }
+    },
+    {
+      "id": "schema-ir-3-lowerschematostandardpass",
+      "kind": "ir-snapshot",
+      "title": "IR after LowerSchemaToStandardPass (lower-schema-to-std)",
+      "stage": "llvm",
+      "text": "module attributes {schema.string_pool = [\"^[a-z]+$\"]} {\n  func.func private @__schema_rt_kind(i64) -> i32 attributes {llvm.readnone}\n  func.func private @__schema_rt_as_f64(i64) -> f64 attributes {llvm.readnone}\n  func.func private @__schema_rt_str_len(i64) -> i64 attributes {llvm.readnone}\n  func.func private @__schema_rt_str_matches(i64, i64) -> i1 attributes {llvm.readnone}\n  func.func private @__schema_rt_str_format(i64, i64) -> i1 attributes {llvm.readnone}\n  func.func private @__schema_rt_has_field(i64, i64) -> i1 attributes {llvm.readnone}\n  func.func @fuse_constraint_tree(%arg0: i64) -> i1 {\n    %0 = call @__schema_rt_kind(%arg0) : (i64) -> i32\n    %c3_i32 = arith.constant 3 : i32\n    %1 = arith.cmpi eq, %0, %c3_i32 : i32\n    %2 = scf.if %1 -> (i1) {\n      %3 = func.call @__schema_rt_str_len(%arg0) : (i64) -> i64\n      %c5_i64 = arith.constant 5 : i64\n      %4 = arith.cmpi sge, %3, %c5_i64 : i64\n      %c32_i64 = arith.constant 32 : i64\n      %5 = arith.cmpi sle, %3, %c32_i64 : i64\n      %6 = arith.andi %4, %5 : i1\n      %c0_i64 = arith.constant 0 : i64\n      %7 = func.call @__schema_rt_str_matches(%arg0, %c0_i64) : (i64, i64) -> i1\n      %8 = arith.andi %6, %7 : i1\n      scf.yield %8 : i1\n    } else {\n      %false = arith.constant false\n      scf.yield %false : i1\n    }\n    return %2 : i1\n  }\n}",
+      "provenance": {
+        "mode": "captured",
+        "command": "schema-opt fuse_constraint_tree.mlir --schema-to-std-pipeline --mlir-print-ir-after-all --mlir-print-ir-module-scope --mlir-disable-threading -o /dev/null"
+      }
+    },
+    {
+      "id": "schema-pass-3-lowerschematostandardpass",
+      "kind": "pass-event",
+      "title": "LowerSchemaToStandardPass (lower-schema-to-std)",
+      "pass": "LowerSchemaToStandardPass (lower-schema-to-std)",
+      "index": 3,
+      "changed": true,
+      "before": "schema-ir-2-schemacanonicalizerpass",
+      "after": "schema-ir-3-lowerschematostandardpass",
+      "provenance": {
+        "mode": "captured",
+        "command": "schema-opt fuse_constraint_tree.mlir --schema-to-std-pipeline --mlir-print-ir-after-all --mlir-print-ir-module-scope --mlir-disable-threading -o /dev/null"
+      }
+    },
+    {
+      "id": "schema-pass-4-reconcileunrealizedcastspass",
+      "kind": "pass-event",
+      "title": "ReconcileUnrealizedCastsPass (reconcile-unrealized-casts)",
+      "pass": "ReconcileUnrealizedCastsPass (reconcile-unrealized-casts)",
+      "index": 4,
+      "changed": false,
+      "before": "schema-ir-3-lowerschematostandardpass",
+      "after": "schema-ir-3-lowerschematostandardpass",
+      "provenance": {
+        "mode": "captured",
+        "command": "schema-opt fuse_constraint_tree.mlir --schema-to-std-pipeline --mlir-print-ir-after-all --mlir-print-ir-module-scope --mlir-disable-threading -o /dev/null"
+      }
+    },
+    {
+      "id": "schema-ir-5-canonicalizerpass",
+      "kind": "ir-snapshot",
+      "title": "IR after CanonicalizerPass (canonicalize)",
+      "stage": "llvm",
+      "text": "module attributes {schema.string_pool = [\"^[a-z]+$\"]} {\n  func.func private @__schema_rt_kind(i64) -> i32 attributes {llvm.readnone}\n  func.func private @__schema_rt_as_f64(i64) -> f64 attributes {llvm.readnone}\n  func.func private @__schema_rt_str_len(i64) -> i64 attributes {llvm.readnone}\n  func.func private @__schema_rt_str_matches(i64, i64) -> i1 attributes {llvm.readnone}\n  func.func private @__schema_rt_str_format(i64, i64) -> i1 attributes {llvm.readnone}\n  func.func private @__schema_rt_has_field(i64, i64) -> i1 attributes {llvm.readnone}\n  func.func @fuse_constraint_tree(%arg0: i64) -> i1 {\n    %false = arith.constant false\n    %c0_i64 = arith.constant 0 : i64\n    %c32_i64 = arith.constant 32 : i64\n    %c5_i64 = arith.constant 5 : i64\n    %c3_i32 = arith.constant 3 : i32\n    %0 = call @__schema_rt_kind(%arg0) : (i64) -> i32\n    %1 = arith.cmpi eq, %0, %c3_i32 : i32\n    %2 = scf.if %1 -> (i1) {\n      %3 = func.call @__schema_rt_str_len(%arg0) : (i64) -> i64\n      %4 = arith.cmpi sge, %3, %c5_i64 : i64\n      %5 = arith.cmpi sle, %3, %c32_i64 : i64\n      %6 = arith.andi %4, %5 : i1\n      %7 = func.call @__schema_rt_str_matches(%arg0, %c0_i64) : (i64, i64) -> i1\n      %8 = arith.andi %6, %7 : i1\n      scf.yield %8 : i1\n    } else {\n      scf.yield %false : i1\n    }\n    return %2 : i1\n  }\n}",
+      "provenance": {
+        "mode": "captured",
+        "command": "schema-opt fuse_constraint_tree.mlir --schema-to-std-pipeline --mlir-print-ir-after-all --mlir-print-ir-module-scope --mlir-disable-threading -o /dev/null"
+      }
+    },
+    {
+      "id": "schema-pass-5-canonicalizerpass",
+      "kind": "pass-event",
+      "title": "CanonicalizerPass (canonicalize)",
+      "pass": "CanonicalizerPass (canonicalize)",
+      "index": 5,
+      "changed": true,
+      "before": "schema-ir-3-lowerschematostandardpass",
+      "after": "schema-ir-5-canonicalizerpass",
+      "provenance": {
+        "mode": "captured",
+        "command": "schema-opt fuse_constraint_tree.mlir --schema-to-std-pipeline --mlir-print-ir-after-all --mlir-print-ir-module-scope --mlir-disable-threading -o /dev/null"
+      }
+    },
+    {
+      "id": "schema-pass-6-csepass",
+      "kind": "pass-event",
+      "title": "CSEPass (cse)",
+      "pass": "CSEPass (cse)",
+      "index": 6,
+      "changed": false,
+      "before": "schema-ir-5-canonicalizerpass",
+      "after": "schema-ir-5-canonicalizerpass",
+      "provenance": {
+        "mode": "captured",
+        "command": "schema-opt fuse_constraint_tree.mlir --schema-to-std-pipeline --mlir-print-ir-after-all --mlir-print-ir-module-scope --mlir-disable-threading -o /dev/null"
+      }
+    },
+    {
+      "id": "schema-ir-7-symboldcepass",
+      "kind": "ir-snapshot",
+      "title": "IR after SymbolDCEPass (symbol-dce)",
+      "stage": "llvm",
+      "text": "module attributes {schema.string_pool = [\"^[a-z]+$\"]} {\n  func.func private @__schema_rt_kind(i64) -> i32 attributes {llvm.readnone}\n  func.func private @__schema_rt_str_len(i64) -> i64 attributes {llvm.readnone}\n  func.func private @__schema_rt_str_matches(i64, i64) -> i1 attributes {llvm.readnone}\n  func.func @fuse_constraint_tree(%arg0: i64) -> i1 {\n    %false = arith.constant false\n    %c0_i64 = arith.constant 0 : i64\n    %c32_i64 = arith.constant 32 : i64\n    %c5_i64 = arith.constant 5 : i64\n    %c3_i32 = arith.constant 3 : i32\n    %0 = call @__schema_rt_kind(%arg0) : (i64) -> i32\n    %1 = arith.cmpi eq, %0, %c3_i32 : i32\n    %2 = scf.if %1 -> (i1) {\n      %3 = func.call @__schema_rt_str_len(%arg0) : (i64) -> i64\n      %4 = arith.cmpi sge, %3, %c5_i64 : i64\n      %5 = arith.cmpi sle, %3, %c32_i64 : i64\n      %6 = arith.andi %4, %5 : i1\n      %7 = func.call @__schema_rt_str_matches(%arg0, %c0_i64) : (i64, i64) -> i1\n      %8 = arith.andi %6, %7 : i1\n      scf.yield %8 : i1\n    } else {\n      scf.yield %false : i1\n    }\n    return %2 : i1\n  }\n}",
+      "provenance": {
+        "mode": "captured",
+        "command": "schema-opt fuse_constraint_tree.mlir --schema-to-std-pipeline --mlir-print-ir-after-all --mlir-print-ir-module-scope --mlir-disable-threading -o /dev/null"
+      }
+    },
+    {
+      "id": "schema-pass-7-symboldcepass",
+      "kind": "pass-event",
+      "title": "SymbolDCEPass (symbol-dce)",
+      "pass": "SymbolDCEPass (symbol-dce)",
+      "index": 7,
+      "changed": true,
+      "before": "schema-ir-5-canonicalizerpass",
+      "after": "schema-ir-7-symboldcepass",
+      "provenance": {
+        "mode": "captured",
+        "command": "schema-opt fuse_constraint_tree.mlir --schema-to-std-pipeline --mlir-print-ir-after-all --mlir-print-ir-module-scope --mlir-disable-threading -o /dev/null"
+      }
+    },
+    {
+      "id": "schema-llvm",
+      "kind": "ir-snapshot",
+      "title": "LLVM dialect output",
+      "stage": "llvm",
+      "text": "module attributes {schema.string_pool = [\"^[a-z]+$\"]} {\n  llvm.func @__schema_rt_kind(i64) -> i32 attributes {llvm.readnone, memory_effects = #llvm.memory_effects<other = none, argMem = none, inaccessibleMem = none, errnoMem = none, targetMem0 = none, targetMem1 = none>, sym_visibility = \"private\"}\n  llvm.func @__schema_rt_str_len(i64) -> i64 attributes {llvm.readnone, memory_effects = #llvm.memory_effects<other = none, argMem = none, inaccessibleMem = none, errnoMem = none, targetMem0 = none, targetMem1 = none>, sym_visibility = \"private\"}\n  llvm.func @__schema_rt_str_matches(i64, i64) -> i1 attributes {llvm.readnone, memory_effects = #llvm.memory_effects<other = none, argMem = none, inaccessibleMem = none, errnoMem = none, targetMem0 = none, targetMem1 = none>, sym_visibility = \"private\"}\n  llvm.func @fuse_constraint_tree(%arg0: i64) -> i1 {\n    %0 = llvm.mlir.constant(false) : i1\n    %1 = llvm.mlir.constant(0 : i64) : i64\n    %2 = llvm.mlir.constant(32 : i64) : i64\n    %3 = llvm.mlir.constant(5 : i64) : i64\n    %4 = llvm.mlir.constant(3 : i32) : i32\n    %5 = llvm.call @__schema_rt_kind(%arg0) : (i64) -> i32\n    %6 = llvm.icmp \"eq\" %5, %4 : i32\n    llvm.cond_br %6, ^bb1, ^bb2\n  ^bb1:  // pred: ^bb0\n    %7 = llvm.call @__schema_rt_str_len(%arg0) : (i64) -> i64\n    %8 = llvm.icmp \"sge\" %7, %3 : i64\n    %9 = llvm.icmp \"sle\" %7, %2 : i64\n    %10 = llvm.and %8, %9 : i1\n    %11 = llvm.call @__schema_rt_str_matches(%arg0, %1) : (i64, i64) -> i1\n    %12 = llvm.and %10, %11 : i1\n    llvm.br ^bb3(%12 : i1)\n  ^bb2:  // pred: ^bb0\n    llvm.br ^bb3(%0 : i1)\n  ^bb3(%13: i1):  // 2 preds: ^bb1, ^bb2\n    llvm.br ^bb4\n  ^bb4:  // pred: ^bb3\n    llvm.return %13 : i1\n  }\n}",
+      "provenance": {
+        "mode": "captured",
+        "command": "schema-opt fuse_constraint_tree.mlir --schema-to-llvm-pipeline"
+      }
+    },
+    {
+      "id": "schema-bad-input",
+      "kind": "source",
+      "title": "Contradictory constraint (input written for this lab)",
+      "language": "mlir",
+      "text": "// Written for compiler-tooling-lab: a deliberately contradictory constraint,\n// used to capture a real schema-opt verifier diagnostic.\nfunc.func @bad(%doc: !schema.value) -> i1 {\n  %v = schema.validate_string %doc { min_length = 8 : i64, max_length = 3 : i64 } : !schema.value\n  return %v : i1\n}\n",
+      "location": {
+        "file": "lab:inputs/schema-mlir/contradictory-bounds.mlir",
+        "line": 1
+      },
+      "provenance": {
+        "mode": "static",
+        "path": "lab:inputs/schema-mlir/contradictory-bounds.mlir"
+      }
+    },
+    {
+      "id": "schema-verifier-diagnostic",
+      "kind": "diagnostic",
+      "title": "Verifier diagnostic",
+      "tool": "schema-opt",
+      "exitCode": 1,
+      "entries": [
+        {
+          "severity": "error",
+          "message": "'schema.validate_string' op 'max_length' (3) must be >= 'min_length' (8)",
+          "location": {
+            "file": "lab:inputs/schema-mlir/contradictory-bounds.mlir",
+            "line": 4,
+            "column": 8
+          }
+        },
+        {
+          "severity": "note",
+          "message": "see current operation: %0 = \"schema.validate_string\"(%arg0) <{max_length = 3 : i64, min_length = 8 : i64}> : (!schema.value) -> i1",
+          "location": {
+            "file": "lab:inputs/schema-mlir/contradictory-bounds.mlir",
+            "line": 4,
+            "column": 8
+          }
+        }
+      ],
+      "provenance": {
+        "mode": "captured",
+        "command": "schema-opt 'lab:inputs/schema-mlir/contradictory-bounds.mlir'"
+      }
+    },
+    {
+      "id": "schema-pass-timing",
+      "kind": "profile",
+      "title": "Compile-time pass timing",
+      "metric": "wall time",
+      "unit": "s",
+      "total": 0.002,
+      "entries": [
+        {
+          "name": "Parser",
+          "value": 0.0005,
+          "percent": 26.3,
+          "depth": 0
+        },
+        {
+          "name": "CanonicalizerPass",
+          "value": 0.0001,
+          "percent": 3.7,
+          "depth": 0
+        },
+        {
+          "name": "'func.func' Pipeline",
+          "value": 0,
+          "percent": 1.8,
+          "depth": 0
+        },
+        {
+          "name": "SchemaCanonicalizerPass",
+          "value": 0,
+          "percent": 1.7,
+          "depth": 1
+        },
+        {
+          "name": "LowerSchemaToStandardPass",
+          "value": 0.0003,
+          "percent": 13,
+          "depth": 0
+        },
+        {
+          "name": "ReconcileUnrealizedCastsPass",
+          "value": 0.0001,
+          "percent": 3.2,
+          "depth": 0
+        },
+        {
+          "name": "CanonicalizerPass",
+          "value": 0.0001,
+          "percent": 5.6,
+          "depth": 0
+        },
+        {
+          "name": "CSEPass",
+          "value": 0,
+          "percent": 0.8,
+          "depth": 0
+        },
+        {
+          "name": "(A) DominanceInfo",
+          "value": 0,
+          "percent": 0,
+          "depth": 1
+        },
+        {
+          "name": "SymbolDCEPass",
+          "value": 0.0001,
+          "percent": 4.9,
+          "depth": 0
+        },
+        {
+          "name": "Output",
+          "value": 0.0001,
+          "percent": 4.8,
+          "depth": 0
+        },
+        {
+          "name": "Rest",
+          "value": 0.0007,
+          "percent": 35,
+          "depth": 0
+        }
+      ],
+      "provenance": {
+        "mode": "captured",
+        "command": "schema-opt fuse_constraint_tree.mlir --schema-to-std-pipeline --mlir-timing -o /dev/null"
+      }
+    }
+  ]
+}

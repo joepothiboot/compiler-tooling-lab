@@ -1,0 +1,46 @@
+# Daily check that pins are still reachable, artifacts match the manifest, and
+# no newer release has been missed (e.g. a repository_dispatch that never fired).
+# Newer releases are handed to the update workflow; problems fail this job.
+name: Reconcile pins
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Compare manifest with remotes
+        id: reconcile
+        run: |
+          set +e
+          node scripts/reconcile.mjs > reconcile.json
+          status=$?
+          cat reconcile.json
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+      - name: Dispatch updates for newer releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node -e 'for (const u of require("./reconcile.json").updates) console.log(u.id, u.ref)' |
+          while read -r project ref; do
+            echo "::notice::$project has a newer release $ref"
+            gh workflow run update.yml -f project="$project" -f ref="$ref"
+          done
+      - name: Fail on drift
+        if: steps.reconcile.outputs.status != '0'
+        run: |
+          node -e 'for (const p of require("./reconcile.json").problems) console.log(`::error::${p}`)'
+          exit 1

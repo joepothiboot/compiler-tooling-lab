@@ -1,0 +1,7 @@
+dist/
+.work/
+node_modules/
+package-lock.json
+artifacts/
+inputs/
+manifest.json

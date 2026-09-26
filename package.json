@@ -1,0 +1,26 @@
+{
+  "name": "compiler-tooling-lab",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Integration portal for json-schema-mlir, VizMLIR, mlir-lldb-tools and nano-dsp-mlir.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test test/*.test.mjs",
+    "typecheck": "tsc -p tsconfig.json",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run format:check && npm run typecheck && npm test && npm run build",
+    "capture": "bash scripts/capture.sh",
+    "update-manifest": "node scripts/update-manifest.mjs",
+    "reconcile": "node scripts/reconcile.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.2"
+  }
+}

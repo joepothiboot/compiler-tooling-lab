@@ -1,0 +1,99 @@
+# Re-pins one project, re-captures every artifact at the new pins, and opens an
+# integration PR. Triggered manually, by a project's release (repository_dispatch),
+# or by the scheduled reconciliation.
+#
+# repository_dispatch payload:
+#   { "event_type": "project-release",
+#     "client_payload": { "project": "vizmlir", "ref": "v0.3.0" } }
+name: Update project pin
+
+on:
+  workflow_dispatch:
+    inputs:
+      project:
+        description: Project to re-pin
+        required: true
+        type: choice
+        options: [schema-mlir, vizmlir, mlir-lldb-tools, nano-dsp-mlir]
+      ref:
+        description: Release tag or full 40-character commit SHA (branches are refused)
+        required: true
+        type: string
+  repository_dispatch:
+    types: [project-release]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: update-pins
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-24.04
+    env:
+      # Untrusted input goes through env, never inline into shell.
+      PROJECT: ${{ inputs.project || github.event.client_payload.project }}
+      REF: ${{ inputs.ref || github.event.client_payload.ref }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Re-pin manifest
+        id: pin
+        run: node scripts/update-manifest.mjs --project "$PROJECT" --ref "$REF" | tee -a "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-python@v5
+        if: steps.pin.outputs.changed == 'true'
+        with:
+          python-version: "3.11"
+      - name: Install toolchain
+        if: steps.pin.outputs.changed == 'true'
+        run: |
+          LLVM="$(node -p "require('./manifest.json').toolchain.llvm.split('.')[0]")"
+          wget -qO /tmp/llvm.sh https://apt.llvm.org/llvm.sh
+          sudo bash /tmp/llvm.sh "$LLVM"
+          sudo apt-get install -y "mlir-$LLVM-tools" "libmlir-$LLVM-dev" "llvm-$LLVM-tools" ninja-build
+          python3 -m pip install --user lit
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          echo "LLVM_PREFIX=/usr/lib/llvm-$LLVM" >> "$GITHUB_ENV"
+      - uses: dtolnay/rust-toolchain@stable
+        if: steps.pin.outputs.changed == 'true'
+        with:
+          targets: wasm32-unknown-unknown
+
+      # All projects are re-captured: VizMLIR diffs IR from the others.
+      - name: Capture artifacts at the new pins
+        if: steps.pin.outputs.changed == 'true'
+        run: bash scripts/capture.sh
+
+      - name: Check
+        if: steps.pin.outputs.changed == 'true'
+        run: npm run check
+
+      - uses: peter-evans/create-pull-request@v7
+        if: steps.pin.outputs.changed == 'true'
+        with:
+          # PRs opened with GITHUB_TOKEN do not trigger CI; a PAT or App token does.
+          token: ${{ secrets.PIN_UPDATE_TOKEN || github.token }}
+          branch: update/${{ steps.pin.outputs.project }}-${{ steps.pin.outputs.version }}
+          commit-message: "Pin ${{ steps.pin.outputs.project }} to ${{ steps.pin.outputs.version }}"
+          title: "Pin ${{ steps.pin.outputs.project }} to ${{ steps.pin.outputs.version }}"
+          body: |
+            Re-pins **${{ steps.pin.outputs.project }}** and re-captures all artifacts.
+
+            - From: `${{ steps.pin.outputs.from }}`
+            - To: `${{ steps.pin.outputs.to }}` (`${{ steps.pin.outputs.version }}`)
+            - Changes: https://github.com/${{ steps.pin.outputs.repo }}/compare/${{ steps.pin.outputs.from }}...${{ steps.pin.outputs.to }}
+            - Trigger: `${{ github.event_name }}`
+
+            Review the `artifacts/` diff: it shows exactly how the projects' real output changed.
+            New `unavailable` artifacts mean a build or tool failed at the new pin (see the capture step log).
+          labels: integration
+          delete-branch: true

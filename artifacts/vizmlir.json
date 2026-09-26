@@ -1,0 +1,419 @@
+{
+  "project": "vizmlir",
+  "commit": "46e767bdc1683170aea7c3220c485f6fc5bf5e20",
+  "capture": {
+    "capturedAt": "2026-09-26T12:26:53.564Z",
+    "host": "darwin-arm64",
+    "toolchain": {
+      "llvm": "23.1.1",
+      "python": "3.11.7",
+      "node": "v22.6.0",
+      "rustc": "1.91.1"
+    }
+  },
+  "artifacts": [
+    {
+      "id": "viz-schema-canonicalize-diff",
+      "kind": "pass-event",
+      "title": "json-schema-mlir canonicalization, diffed by VizMLIR",
+      "pass": "SchemaCanonicalizerPass (schema-canonicalize)",
+      "index": 2,
+      "changed": true,
+      "before": "schema-ir-0-parsed",
+      "after": "schema-ir-2-schemacanonicalizerpass",
+      "diff": {
+        "tool": "VizMLIR diffSnapshots",
+        "rows": [
+          {
+            "type": "removed",
+            "before": "schema.validate_string"
+          },
+          {
+            "type": "removed",
+            "before": "schema.validate_string"
+          },
+          {
+            "type": "removed",
+            "before": "arith.andi"
+          },
+          {
+            "type": "removed",
+            "before": "arith.andi"
+          }
+        ],
+        "beforeGraph": {
+          "nodes": 9,
+          "edges": 10,
+          "diagnostics": [
+            {
+              "message": "undefined SSA value",
+              "line": 2,
+              "symbol": "%arg0"
+            },
+            {
+              "message": "undefined SSA value",
+              "line": 3,
+              "symbol": "%arg0"
+            },
+            {
+              "message": "undefined SSA value",
+              "line": 4,
+              "symbol": "%arg0"
+            },
+            {
+              "message": "undefined SSA value",
+              "line": 5,
+              "symbol": "%arg0"
+            }
+          ]
+        },
+        "afterGraph": {
+          "nodes": 5,
+          "edges": 4,
+          "diagnostics": [
+            {
+              "message": "undefined SSA value",
+              "line": 2,
+              "symbol": "%arg0"
+            },
+            {
+              "message": "undefined SSA value",
+              "line": 3,
+              "symbol": "%arg0"
+            }
+          ]
+        }
+      },
+      "provenance": {
+        "mode": "captured",
+        "command": "node scripts/capture.mjs (imports VizMLIR src/wasm/bridge.js, src/diff.js and runs public/mlir_core.wasm)"
+      }
+    },
+    {
+      "id": "viz-schema-lowering-diff",
+      "kind": "pass-event",
+      "title": "json-schema-mlir lowering to std, diffed by VizMLIR",
+      "pass": "LowerSchemaToStandardPass (lower-schema-to-std)",
+      "index": 3,
+      "changed": true,
+      "before": "schema-ir-2-schemacanonicalizerpass",
+      "after": "schema-ir-3-lowerschematostandardpass",
+      "diff": {
+        "tool": "VizMLIR diffSnapshots",
+        "rows": [
+          {
+            "type": "changed",
+            "before": "module",
+            "after": "["
+          },
+          {
+            "type": "changed",
+            "before": "func.func @fuse_constraint_tree",
+            "after": "func.func @__schema_rt_kind"
+          },
+          {
+            "type": "added",
+            "after": "func.func @__schema_rt_as_f64"
+          },
+          {
+            "type": "added",
+            "after": "func.func @__schema_rt_str_len"
+          },
+          {
+            "type": "added",
+            "after": "func.func @__schema_rt_str_matches"
+          },
+          {
+            "type": "added",
+            "after": "func.func @__schema_rt_str_format"
+          },
+          {
+            "type": "added",
+            "after": "func.func @__schema_rt_has_field"
+          },
+          {
+            "type": "added",
+            "after": "func.func @fuse_constraint_tree"
+          },
+          {
+            "type": "added",
+            "after": "call @__schema_rt_kind"
+          },
+          {
+            "type": "added",
+            "after": "arith.constant"
+          },
+          {
+            "type": "added",
+            "after": "arith.cmpi"
+          },
+          {
+            "type": "added",
+            "after": "scf.if"
+          },
+          {
+            "type": "added",
+            "after": "func.call @__schema_rt_str_len"
+          },
+          {
+            "type": "added",
+            "after": "arith.constant"
+          },
+          {
+            "type": "added",
+            "after": "arith.cmpi"
+          },
+          {
+            "type": "added",
+            "after": "arith.constant"
+          },
+          {
+            "type": "added",
+            "after": "arith.cmpi"
+          },
+          {
+            "type": "added",
+            "after": "arith.andi"
+          },
+          {
+            "type": "added",
+            "after": "arith.constant"
+          },
+          {
+            "type": "added",
+            "after": "func.call @__schema_rt_str_matches"
+          },
+          {
+            "type": "added",
+            "after": "arith.andi"
+          },
+          {
+            "type": "added",
+            "after": "scf.yield"
+          },
+          {
+            "type": "added",
+            "after": "else"
+          },
+          {
+            "type": "added",
+            "after": "arith.constant"
+          },
+          {
+            "type": "added",
+            "after": "scf.yield"
+          },
+          {
+            "type": "removed",
+            "before": "schema.validate_string"
+          }
+        ],
+        "beforeGraph": {
+          "nodes": 5,
+          "edges": 4,
+          "diagnostics": [
+            {
+              "message": "undefined SSA value",
+              "line": 2,
+              "symbol": "%arg0"
+            },
+            {
+              "message": "undefined SSA value",
+              "line": 3,
+              "symbol": "%arg0"
+            }
+          ]
+        },
+        "afterGraph": {
+          "nodes": 27,
+          "edges": 31,
+          "diagnostics": [
+            {
+              "message": "undefined SSA value",
+              "line": 8,
+              "symbol": "%arg0"
+            },
+            {
+              "message": "undefined SSA value",
+              "line": 9,
+              "symbol": "%arg0"
+            },
+            {
+              "message": "undefined SSA value",
+              "line": 13,
+              "symbol": "%arg0"
+            },
+            {
+              "message": "undefined SSA value",
+              "line": 20,
+              "symbol": "%arg0"
+            }
+          ]
+        }
+      },
+      "provenance": {
+        "mode": "captured",
+        "command": "node scripts/capture.mjs (imports VizMLIR src/wasm/bridge.js, src/diff.js and runs public/mlir_core.wasm)"
+      }
+    },
+    {
+      "id": "viz-nano-linalg-diff",
+      "kind": "pass-event",
+      "title": "nano-dsp-mlir dsp → linalg, diffed by VizMLIR",
+      "pass": "ConvertDSPToLinalg (convert-dsp-to-linalg)",
+      "index": 1,
+      "changed": true,
+      "before": "nano-ir-0-parsed",
+      "after": "nano-ir-1-convertdsptolinalg",
+      "diff": {
+        "tool": "VizMLIR diffSnapshots",
+        "rows": [
+          {
+            "type": "changed",
+            "before": "module",
+            "after": "affine_map"
+          },
+          {
+            "type": "added",
+            "after": "affine_map"
+          },
+          {
+            "type": "added",
+            "after": "affine_map"
+          },
+          {
+            "type": "added",
+            "after": "affine_map"
+          },
+          {
+            "type": "added",
+            "after": "module"
+          },
+          {
+            "type": "added",
+            "after": "tensor.empty"
+          },
+          {
+            "type": "added",
+            "after": "arith.constant"
+          },
+          {
+            "type": "added",
+            "after": "linalg.fill"
+          },
+          {
+            "type": "added",
+            "after": "linalg.generic"
+          },
+          {
+            "type": "added",
+            "after": "^bb0"
+          },
+          {
+            "type": "added",
+            "after": "arith.mulf"
+          },
+          {
+            "type": "added",
+            "after": "arith.addf"
+          },
+          {
+            "type": "added",
+            "after": "linalg.yield"
+          },
+          {
+            "type": "added",
+            "after": "->"
+          },
+          {
+            "type": "added",
+            "after": "tensor.empty"
+          },
+          {
+            "type": "added",
+            "after": "linalg.generic"
+          },
+          {
+            "type": "added",
+            "after": "^bb0"
+          },
+          {
+            "type": "added",
+            "after": "arith.addf"
+          },
+          {
+            "type": "added",
+            "after": "linalg.yield"
+          },
+          {
+            "type": "added",
+            "after": "->"
+          },
+          {
+            "type": "added",
+            "after": "tensor.empty"
+          },
+          {
+            "type": "added",
+            "after": "arith.constant"
+          },
+          {
+            "type": "added",
+            "after": "linalg.generic"
+          },
+          {
+            "type": "added",
+            "after": "^bb0"
+          },
+          {
+            "type": "added",
+            "after": "arith.maximumf"
+          },
+          {
+            "type": "added",
+            "after": "linalg.yield"
+          },
+          {
+            "type": "added",
+            "after": "->"
+          },
+          {
+            "type": "removed",
+            "before": "dsp.conv2d"
+          },
+          {
+            "type": "removed",
+            "before": "dsp.add"
+          },
+          {
+            "type": "removed",
+            "before": "dsp.relu"
+          }
+        ],
+        "beforeGraph": {
+          "nodes": 13,
+          "edges": 14,
+          "diagnostics": []
+        },
+        "afterGraph": {
+          "nodes": 36,
+          "edges": 48,
+          "diagnostics": []
+        }
+      },
+      "provenance": {
+        "mode": "captured",
+        "command": "node scripts/capture.mjs (imports VizMLIR src/wasm/bridge.js, src/diff.js and runs public/mlir_core.wasm)"
+      }
+    },
+    {
+      "id": "viz-tests",
+      "kind": "test-run",
+      "title": "Automated tests",
+      "provenance": {
+        "mode": "unavailable",
+        "reason": "The repository has no automated test suite at the pinned commit. The capture above exercises its WASM parser and diff module."
+      }
+    }
+  ]
+}

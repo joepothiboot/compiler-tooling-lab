@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "toolchain": {
+    "llvm": "23.1.1",
+    "python": "3.11",
+    "node": "22"
+  },
+  "projects": [
+    {
+      "id": "schema-mlir",
+      "name": "json-schema-mlir",
+      "repo": "joepothiboot/json-schema-mlir",
+      "version": "v0.1.0-7-ged3ccd2",
+      "releaseTag": "v0.1.0",
+      "commit": "ed3ccd26398479fb8b0357f3fdaa73f41667d5c6",
+      "demoPath": "projects/schema-mlir/tour.html",
+      "docsPath": "README.md",
+      "stages": [
+        "source",
+        "diagnostics",
+        "mlir"
+      ],
+      "capabilities": [
+        "schema dialect for JSON Schema string and number constraints",
+        "Constraint-lattice canonicalization (subsumption, fusion)",
+        "Lowering to arith/scf/math/func and the LLVM dialect",
+        "Verifier diagnostics with MLIR source locations"
+      ]
+    },
+    {
+      "id": "vizmlir",
+      "name": "VizMLIR",
+      "repo": "joepothiboot/vizmlir",
+      "version": "v0.2.0-8-g46e767b",
+      "releaseTag": "v0.2.0",
+      "commit": "46e767bdc1683170aea7c3220c485f6fc5bf5e20",
+      "demoPath": "projects/vizmlir/tour.html",
+      "docsPath": "README.md",
+      "embeddedDemo": "demos/vizmlir/",
+      "stages": [
+        "passes"
+      ],
+      "capabilities": [
+        "Browser-only MLIR parser compiled from Rust to WebAssembly",
+        "Operation graph rendering on canvas",
+        "SSA-renumbering-aware structural diff between two IR snapshots"
+      ]
+    },
+    {
+      "id": "mlir-lldb-tools",
+      "name": "mlir-lldb-tools",
+      "repo": "joepothiboot/mlir-lldb-tools",
+      "version": "g51b00b3",
+      "releaseTag": null,
+      "commit": "51b00b37fae9dc47a6601d122d3d28c5453f8aee",
+      "demoPath": "projects/mlir-lldb-tools/tour.html",
+      "docsPath": "README.md",
+      "stages": [
+        "debugging"
+      ],
+      "capabilities": [
+        "LLDB commands keyed by MLIR op and SSA value (design; not yet run end to end)",
+        "Provenance invariant: passes may enrich locations, never erase them",
+        "Narrow DAP server for VS Code"
+      ]
+    },
+    {
+      "id": "nano-dsp-mlir",
+      "name": "nano-dsp-mlir",
+      "repo": "joepothiboot/nano-dsp-mlir",
+      "version": "v0.1.0-1-gfedc711",
+      "releaseTag": "v0.1.0",
+      "commit": "fedc7117c6e9ed0b6b98bdca4fa344297ac5b651",
+      "demoPath": "projects/nano-dsp-mlir/tour.html",
+      "docsPath": "README.md",
+      "stages": [
+        "mlir",
+        "passes",
+        "profiling"
+      ],
+      "capabilities": [
+        "dsp dialect: add, relu, matmul, conv2d with shape verifiers",
+        "dsp → linalg.generic conversion",
+        "Differential execution tests via mlir-runner",
+        "Compile-time pass timing (runtime benchmarks not yet measured)"
+      ]
+    }
+  ]
+}
