@@ -134,13 +134,14 @@ function renderBody(ctx, { artifact: a, project: p }) {
     case "debug-value":
       return `<dl class="kv"><dt>Name</dt><dd><code>${esc(a.name)}</code></dd><dt>Type</dt><dd><code>${esc(a.type)}</code></dd><dt>Value</dt><dd><code>${esc(a.summary)}</code></dd>${a.location ? `<dt>Location</dt><dd>${locationLink(p, a.location)}</dd>` : ""}</dl>`;
     case "profile": {
+      const max = Math.max(...a.entries.map((e) => e.percent)) || 1;
       const rows = a.entries
         .map(
           (e) =>
-            `<tr><td class="depth-${Math.min(e.depth, 3)}">${esc(e.name)}</td><td class="num">${e.value.toFixed(4)}</td><td class="num">${e.percent.toFixed(1)}%</td></tr>`,
+            `<tr><td class="depth-${Math.min(e.depth, 3)}">${esc(e.name)}</td><td class="num">${e.value.toFixed(4)}</td><td class="num">${e.percent.toFixed(1)}%</td><td class="plot" aria-hidden="true"><span class="bar" style="--w:${((e.percent / max) * 100).toFixed(1)}%"></span></td></tr>`,
         )
         .join("");
-      return `<div class="table-wrap" tabindex="0"><table><caption>${esc(a.metric)} per pass, one run; total ${a.total} ${esc(a.unit)}</caption><thead><tr><th scope="col">Pass</th><th scope="col" class="num">${esc(a.unit)}</th><th scope="col" class="num">Share</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+      return `<div class="table-wrap" tabindex="0"><table><caption>${esc(a.metric)} per pass, one run; total ${a.total} ${esc(a.unit)}</caption><thead><tr><th scope="col">Pass</th><th scope="col" class="num">${esc(a.unit)}</th><th scope="col" class="num">Share</th><td class="plot" aria-hidden="true"></td></tr></thead><tbody>${rows}</tbody></table></div>`;
     }
     case "execution": {
       const check = a.expected?.length
@@ -338,7 +339,9 @@ export function landingPage(ctx) {
     .join("");
   const body = `
 <h1>Compiler Tooling Lab</h1>
-<p class="lede">Four separate MLIR projects, each pinned to an exact commit and presented as one developer-tooling pipeline: from input source, through diagnostics and MLIR, to pass inspection, debugging and profiling.</p>
+<p class="subtitle">One reproducible pipeline across four pinned MLIR projects</p>
+<p class="byline">${projects.map((p) => `${esc(p.name)}@<code>${short(p.commit)}</code>`).join(" · ")}<br>Captured with LLVM ${esc(ctx.manifest.toolchain.llvm)}, Python ${esc(ctx.manifest.toolchain.python)}, Node ${esc(ctx.manifest.toolchain.node)}</p>
+<div class="abstract"><p><b>Abstract.</b> Four separate MLIR projects, each pinned to an exact commit and presented as one developer-tooling pipeline: from input source, through diagnostics and MLIR, to pass inspection, debugging and profiling. Every output is either captured from the project's own tool or read verbatim from its repository. Nothing is mocked, and gaps are labelled.</p></div>
 <section aria-labelledby="pipeline"><h2 id="pipeline">The pipeline</h2><ol class="stages">${stages}</ol></section>
 <section aria-labelledby="projects"><h2 id="projects">The projects, in order</h2><ol class="cards">${cards}</ol></section>
 <section aria-labelledby="labels"><h2 id="labels">How output is labelled</h2>

@@ -1,39 +1,45 @@
+/* Academic "artifact appendix" theme: a paper-like column, numbered sections,
+   booktabs tables, captioned artifacts and provenance as evaluation badges.
+   System fonts only, so the site stays free of runtime dependencies. */
 :root {
-  --bg: #ffffff;
-  --fg: #1b1f24;
-  --muted: #57606a;
-  --line: #d0d7de;
-  --panel: #f6f8fa;
-  --link: #0550ae;
-  --accent: #8250df;
-  --ok: #116329;
-  --bad: #a40e26;
-  --captured-bg: #dafbe1;
-  --captured-fg: #116329;
-  --static-bg: #ddf4ff;
-  --static-fg: #0550ae;
-  --na-bg: #fff8c5;
-  --na-fg: #7d4e00;
+  --bg: #fefefd;
+  --fg: #1a1a19;
+  --muted: #5d5c58;
+  --line: #d9d8d3;
+  --rule: #1a1a19;
+  --panel: #f5f5f2;
+  --link: #1f4a8a;
+  --accent: #1f4a8a;
+  --ok: #1e6b3a;
+  --bad: #a3231b;
+  --captured-fg: #1e6b3a;
+  --static-fg: #1f4a8a;
+  --na-fg: #8a5a00;
+  --na-bg: #fbf6ea;
+  --plot: #1f4a8a;
+  --serif:
+    "Iowan Old Style", Charter, "Bitstream Charter", "Sitka Text", Cambria,
+    Georgia, serif;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   color-scheme: light dark;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0d1117;
-    --fg: #e6edf3;
-    --muted: #9198a1;
-    --line: #30363d;
-    --panel: #161b22;
-    --link: #58a6ff;
-    --accent: #bc8cff;
-    --ok: #3fb950;
-    --bad: #ff7b72;
-    --captured-bg: #12361f;
-    --captured-fg: #7ee787;
-    --static-bg: #0c2d4a;
-    --static-fg: #79c0ff;
-    --na-bg: #3b2e00;
-    --na-fg: #e3b341;
+    --bg: #17181a;
+    --fg: #e6e4df;
+    --muted: #a3a19b;
+    --line: #36373a;
+    --rule: #cfccc5;
+    --panel: #1f2023;
+    --link: #93b4ea;
+    --accent: #93b4ea;
+    --ok: #7cc795;
+    --bad: #f08c82;
+    --captured-fg: #7cc795;
+    --static-fg: #93b4ea;
+    --na-fg: #e0b458;
+    --na-bg: #26221a;
+    --plot: #93b4ea;
   }
 }
 
@@ -47,58 +53,79 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--fg);
-  font:
-    16px/1.6 system-ui,
-    -apple-system,
-    "Segoe UI",
-    sans-serif;
+  font: 17px/1.6 var(--serif);
+  font-kerning: normal;
 }
 main,
 header.site,
 footer.site {
-  max-width: 60rem;
+  max-width: 44rem;
   margin: 0 auto;
   padding: 0 16px;
 }
 main {
   padding-bottom: 3rem;
+  counter-reset: sec art tbl;
 }
 a {
   color: var(--link);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
 }
 a:focus-visible,
 pre:focus-visible,
 summary:focus-visible,
 .table-wrap:focus-visible,
 button:focus-visible {
-  outline: 3px solid var(--accent);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 600;
+  line-height: 1.25;
+  text-wrap: balance;
+}
 h1 {
-  font-size: clamp(1.6rem, 4vw, 2.2rem);
-  line-height: 1.2;
-  margin: 1.5rem 0 0.5rem;
+  font-size: clamp(1.6rem, 4vw, 2.1rem);
+  text-align: center;
+  margin: 2.5rem 0 0.5rem;
 }
 h2 {
-  font-size: 1.35rem;
-  margin: 2rem 0 0.5rem;
+  font-size: 1.3rem;
+  margin: 2.5rem 0 0.5rem;
 }
 h3 {
   font-size: 1.05rem;
-  margin: 1.25rem 0 0.25rem;
+  margin: 1.5rem 0 0.25rem;
 }
 code {
   font-family: var(--mono);
-  font-size: 0.9em;
+  font-size: 0.82em;
   overflow-wrap: anywhere;
 }
 .lede {
-  font-size: 1.1rem;
+  font-style: italic;
   color: var(--muted);
 }
 .meta {
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+/* Numbered sections: "2  The pipeline", "2.1  Capabilities". */
+main > section {
+  counter-reset: sub;
+}
+main > section > h2::before {
+  counter-increment: sec;
+  content: counter(sec) "\2002";
+}
+main > section > h3::before {
+  counter-increment: sub;
+  content: counter(sec) "." counter(sub) "\2002";
 }
 
 .skip {
@@ -113,17 +140,21 @@ code {
   z-index: 1;
 }
 
+/* Running head */
 header.site {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem 1.5rem;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 1.5rem;
   padding-top: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--rule);
+  font-size: 0.9rem;
 }
 .brand {
-  font-weight: 700;
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
   color: var(--fg);
   text-decoration: none;
 }
@@ -134,127 +165,218 @@ ol.chain {
   list-style: none;
   margin: 0;
   padding: 0;
-  font-size: 0.95rem;
+  font-style: italic;
 }
 ol.chain li + li::before {
   content: "→ ";
   color: var(--muted);
+  font-style: normal;
 }
 [aria-current="page"] {
-  font-weight: 700;
   color: var(--fg);
-}
-footer.site {
-  border-top: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 0.9rem;
-  padding-top: 1rem;
-  padding-bottom: 2rem;
+  text-decoration: none;
 }
 
-ol.stages,
-ol.cards {
+/* Footer as a footnote block */
+footer.site {
+  color: var(--muted);
+  font-size: 0.85rem;
+  padding-top: 0.5rem;
+  padding-bottom: 2rem;
+}
+footer.site::before {
+  content: "";
+  display: block;
+  width: 30%;
+  border-top: 1px solid var(--muted);
+  margin-bottom: 0.5rem;
+}
+
+/* Title block (landing page) */
+.subtitle {
+  text-align: center;
+  font-size: 1.1rem;
+  font-style: italic;
+  margin: 0;
+}
+.byline {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0.5rem 0 0;
+}
+.abstract {
+  margin: 1.75rem 2rem 0;
+  font-size: 0.95rem;
+  text-align: justify;
+  hyphens: auto;
+}
+.abstract b,
+.runin {
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+}
+
+/* Pipeline stages: a ruled two-column list */
+ol.stages {
   list-style: none;
   padding: 0;
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-}
-ol.stages li,
-.card {
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  background: var(--panel);
-}
-ol.stages {
+  margin: 1rem 0 0;
   counter-reset: stage;
+  border-top: 1.5px solid var(--rule);
+  border-bottom: 1.5px solid var(--rule);
+}
+ol.stages li {
+  display: grid;
+  grid-template-columns: 10rem 1fr;
+  column-gap: 1.25rem;
+  padding: 0.6rem 0;
+}
+ol.stages li + li {
+  border-top: 1px solid var(--line);
+}
+ol.stages h3 {
+  grid-row: span 2;
+  margin: 0;
+  font-size: 1rem;
 }
 ol.stages h3::before {
   counter-increment: stage;
-  content: counter(stage) ". ";
+  content: counter(stage) ".\2002";
   color: var(--muted);
+  font-weight: 400;
 }
-ol.stages h3,
-.card h3 {
-  margin-top: 0;
-}
-.card p,
 ol.stages p {
-  margin: 0.35rem 0;
+  margin: 0;
+}
+ol.stages .meta {
+  font-style: italic;
+}
+
+/* Projects: a reference list, [1] … [4] */
+ol.cards {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+  counter-reset: ref;
+}
+.card {
+  position: relative;
+  padding-left: 2.5rem;
+  margin: 0 0 1.1rem;
+}
+.card::before {
+  counter-increment: ref;
+  content: "[" counter(ref) "]";
+  position: absolute;
+  left: 0;
+  top: 0.05rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.card h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+.card p {
+  margin: 0.15rem 0;
 }
 
 .pin {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem 1rem;
+  justify-content: center;
+  gap: 0.25rem 1.25rem;
   color: var(--muted);
   font-size: 0.9rem;
+  margin: 0.25rem 0 1.5rem;
 }
 .callout {
-  border-left: 4px solid var(--na-fg);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--na-fg);
   background: var(--na-bg);
   padding: 0.5rem 1rem;
-  border-radius: 4px;
+  font-size: 0.95rem;
 }
 .callout p {
   margin: 0.25rem 0;
 }
 
+/* Provenance, styled after artifact-evaluation badges */
 .badge {
-  display: inline-block;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  padding: 0.05rem 0.45rem;
-  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
   white-space: nowrap;
 }
+.badge::before {
+  content: "";
+  width: 0.6em;
+  height: 0.6em;
+  border-radius: 50%;
+  background: currentColor;
+}
 .badge.captured {
-  background: var(--captured-bg);
   color: var(--captured-fg);
 }
 .badge.static {
-  background: var(--static-bg);
   color: var(--static-fg);
 }
 .badge.unavailable {
-  background: var(--na-bg);
   color: var(--na-fg);
+}
+.badge.unavailable::before {
+  background: none;
+  border: 1.5px solid currentColor;
 }
 ul.legend {
   list-style: none;
   padding: 0;
+  margin: 1rem 0 0;
 }
 ul.legend li {
-  margin: 0.4rem 0;
+  display: grid;
+  grid-template-columns: 9rem 1fr;
+  column-gap: 1rem;
+  margin: 0.5rem 0;
 }
 
+/* Artifacts are captioned and numbered like figures */
 .artifact {
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 0.25rem 1rem 0.5rem;
-  margin: 1rem 0;
+  margin: 1.75rem 0;
+}
+.artifact-title {
+  font-size: 0.95rem;
+  font-weight: 400;
+  margin: 0 0 0.5rem;
+}
+.artifact-title::before {
+  counter-increment: art;
+  content: "Artifact " counter(art) ".\2002";
+  font-weight: 600;
 }
 .prov {
   font-size: 0.85rem;
   color: var(--muted);
-  border-top: 1px dashed var(--line);
-  padding-top: 0.5rem;
-  margin-bottom: 0.25rem;
+  margin: 0.5rem 0 0;
 }
 .unavailable {
-  padding: 0.5rem 0;
+  padding: 0.6rem 0.9rem;
+  border: 1px dashed var(--na-fg);
+  font-size: 0.95rem;
 }
 pre {
   background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 6px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
   padding: 0.75rem;
   overflow: auto;
   max-height: 32rem;
-  font: 0.85rem/1.5 var(--mono);
+  font: 0.8rem/1.5 var(--mono);
   position: relative;
 }
 pre code {
@@ -267,15 +389,16 @@ details {
 summary {
   cursor: pointer;
   color: var(--link);
+  font-size: 0.95rem;
 }
 .copy {
   display: block;
-  font: inherit;
-  font-size: 0.8rem;
+  font: 0.8rem var(--serif);
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
   margin: 0.5rem 0 -0.25rem auto;
-  padding: 0.1rem 0.5rem;
+  padding: 0.05rem 0.5rem;
   border: 1px solid var(--line);
-  border-radius: 4px;
   background: var(--bg);
   color: var(--fg);
   cursor: pointer;
@@ -289,9 +412,10 @@ ul.expected {
 }
 ul.diags li {
   margin: 0.35rem 0;
+  font-size: 0.95rem;
 }
 .sev {
-  font: 700 0.8rem var(--mono);
+  font: 600 0.75rem var(--mono);
   text-transform: uppercase;
 }
 .sev-error {
@@ -314,6 +438,7 @@ ul.diags li {
   color: var(--bad);
 }
 
+/* Booktabs tables */
 .table-wrap {
   overflow-x: auto;
 }
@@ -321,21 +446,42 @@ table {
   border-collapse: collapse;
   width: 100%;
   font-size: 0.9rem;
+  border-bottom: 1.5px solid var(--rule);
 }
 caption {
   text-align: left;
-  color: var(--muted);
-  padding-bottom: 0.25rem;
+  padding-bottom: 0.4rem;
+  font-size: 0.9rem;
+}
+caption::before {
+  counter-increment: tbl;
+  content: "Table " counter(tbl) ".\2002";
+  font-weight: 600;
+}
+thead tr {
+  border-top: 1.5px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+th {
+  font-weight: 600;
 }
 th,
 td {
   text-align: left;
-  padding: 0.3rem 0.5rem;
-  border-bottom: 1px solid var(--line);
+  padding: 0.25rem 0.5rem;
 }
 .num {
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+td.plot {
+  width: 30%;
+}
+.bar {
+  display: block;
+  height: 0.55rem;
+  width: var(--w);
+  background: var(--plot);
 }
 .depth-1 {
   padding-left: 1.5rem;
@@ -348,13 +494,13 @@ td {
 }
 
 ol.tour {
-  padding-left: 1.25rem;
+  padding-left: 1.5rem;
 }
 ol.tour > li {
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
 }
 ol.tour > li::marker {
-  font-weight: 700;
+  font-weight: 600;
   color: var(--muted);
 }
 ol.arch li {
@@ -365,6 +511,11 @@ dl.kv {
   grid-template-columns: max-content 1fr;
   gap: 0.25rem 1rem;
 }
+dl.kv dt {
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
 dl.kv dd {
   margin: 0;
 }
@@ -374,9 +525,28 @@ nav.prevnext {
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 1rem;
-  margin-top: 2.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--line);
+  margin-top: 3rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--rule);
+  font-variant: small-caps;
+  letter-spacing: 0.03em;
+}
+
+@media (max-width: 600px) {
+  body {
+    font-size: 16px;
+  }
+  .abstract {
+    margin-inline: 0;
+    text-align: left;
+  }
+  ol.stages li,
+  ul.legend li {
+    grid-template-columns: 1fr;
+  }
+  ol.stages h3 {
+    grid-row: auto;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
