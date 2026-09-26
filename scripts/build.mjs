@@ -131,6 +131,15 @@ export function build({ out, vizmlirDist, root = ROOT }) {
   write("manifest.json", fs.readFileSync(path.join(root, "manifest.json")));
   write("assets/site.css", fs.readFileSync(path.join(root, "src/site.css")));
   write("assets/copy.js", fs.readFileSync(path.join(root, "src/copy.js")));
+  write("assets/theme.js", fs.readFileSync(path.join(root, "src/theme.js")));
+  write(
+    "assets/compact.js",
+    fs.readFileSync(path.join(root, "src/compact.js")),
+  );
+  write(
+    "assets/terminal.js",
+    fs.readFileSync(path.join(root, "src/terminal.js")),
+  );
   write(".nojekyll", "");
   return written;
 }

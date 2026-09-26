@@ -35,25 +35,23 @@ test("emits a landing page, and a project page and tour per project", () => {
   }
 });
 
-test("landing page explains the six-stage pipeline in order", () => {
+test("landing page lists every project in pipeline order", () => {
   const html = read("index.html");
-  const order = [
-    "Source",
-    "Diagnostics",
-    "MLIR",
-    "Pass inspection",
-    "Debugging",
-    "Profiling",
-  ].map((s) => html.indexOf(`<h3>${s}</h3>`));
+  /** @type {number[]} */
+  const order = manifest.projects.map((/** @type {any} */ p) =>
+    html.indexOf(`<a href="projects/${p.id}/index.html">`),
+  );
   assert.ok(
     order.every((i) => i > 0),
-    "all stages present",
+    "every project linked",
   );
   assert.deepEqual(
     [...order].sort((a, b) => a - b),
     order,
-    "stages in order",
+    "projects in order",
   );
+  for (const p of manifest.projects)
+    assert.ok(html.includes(`href="${p.demoPath}"`), `${p.id}: tour link`);
 });
 
 test("project pages have every required section", () => {

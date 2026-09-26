@@ -261,15 +261,9 @@ function renderTimeline(ctx, prefix) {
 // Pages
 
 /**
- * @param {{ title: string, description: string, base: string, current?: string, body: string, ctx: Ctx }} o
+ * @param {{ title: string, description: string, base: string, project?: string, body: string, ctx: Ctx }} o
  */
-export function page({ title, description, base, current, body, ctx }) {
-  const nav = ctx.manifest.projects
-    .map(
-      (p) =>
-        `<li><a href="${projectHref(base, p.id)}"${p.id === current ? ' aria-current="page"' : ""}>${esc(p.name)}</a></li>`,
-    )
-    .join("");
+export function page({ title, description, base, project, body, ctx }) {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -277,19 +271,20 @@ export function page({ title, description, base, current, body, ctx }) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
+<script>try{if(localStorage.getItem("theme")==="dark")document.documentElement.dataset.theme="dark"}catch{}</script>
 <link rel="stylesheet" href="${base}assets/site.css">
 <script src="${base}assets/copy.js" defer></script>
+<script src="${base}assets/theme.js" defer></script>
+<script src="${base}assets/compact.js" defer></script>
+<script src="${base}assets/terminal.js" defer></script>
 </head>
-<body>
+<body data-base="${base}"${project ? ` data-project="${esc(project)}"` : ""}>
 <a class="skip" href="#main">Skip to content</a>
-<header class="site">
-<a class="brand" href="${base}index.html">Compiler Tooling Lab</a>
-<nav aria-label="Projects"><ol class="chain">${nav}</ol></nav>
-</header>
+<header class="site"></header>
 <main id="main">
 ${body}
 </main>
-<footer class="site"><p>Versions pinned in <a href="${base}manifest.json">manifest.json</a>. Artifacts: <a href="${base}artifacts/">artifacts/</a>. Nothing here is mocked; gaps are labelled.</p></footer>
+<footer class="site"><p>LLVM ${esc(ctx.manifest.toolchain.llvm)} · Python ${esc(ctx.manifest.toolchain.python)} · Node ${esc(ctx.manifest.toolchain.node)}. Versions pinned in <a href="${base}manifest.json">manifest.json</a>. Artifacts: <a href="${base}artifacts/">artifacts/</a>. Nothing here is mocked; gaps are labelled.</p></footer>
 </body>
 </html>
 `;
@@ -297,7 +292,7 @@ ${body}
 
 /** @param {Ctx} ctx @param {Project} p @param {string} base */
 function pinLine(ctx, p, base) {
-  return `<p class="pin"><span>Version <code>${esc(p.version)}</code></span> <span>Commit <a href="${esc(gh(p, "tree"))}"><code>${short(p.commit)}</code></a></span> <span>Release ${p.releaseTag ? `<code>${esc(p.releaseTag)}</code>` : "none yet"}</span> <span>Stages: ${p.stages.map((s) => esc(STAGE_LABEL[s])).join(", ")}</span></p>`;
+  return `<dl class="pin"><div><dt>Version</dt><dd><code>${esc(p.version)}</code></dd></div><div><dt>Commit</dt><dd><a href="${esc(gh(p, "tree"))}"><code>${short(p.commit)}</code></a></dd></div><div><dt>Release</dt><dd>${p.releaseTag ? `<code>${esc(p.releaseTag)}</code>` : "none yet"}</dd></div><div><dt>Stages</dt><dd>${p.stages.map((s) => esc(STAGE_LABEL[s])).join(" · ")}</dd></div></dl>`;
 }
 
 /** @param {Ctx} ctx @param {Project} p @param {string} base */
@@ -312,46 +307,28 @@ function chainNav(ctx, p, base, suffix = "index.html") {
     /** @type {string} */ label,
   ) =>
     `<a rel="${rel}" href="${base}projects/${x.id}/${suffix}">${label}: ${esc(x.name)}</a>`;
-  return `<nav class="prevnext" aria-label="Project chain">${prev ? link(prev, "prev", "Previous") : `<a href="${base}index.html">Overview</a>`}${next ? link(next, "next", "Next") : `<a href="${base}index.html">Back to the overview</a>`}</nav>`;
+  const home = `<a href="${base}index.html">All projects</a>`;
+  return `<nav class="prevnext" aria-label="Project chain"><span>${prev ? link(prev, "prev", "Previous") : ""}</span>${home}<span>${next ? link(next, "next", "Next") : ""}</span></nav>`;
 }
 
 /** @param {Ctx} ctx */
 export function landingPage(ctx) {
   const base = "";
   const { projects } = ctx.manifest;
-  const stages = STAGES.map((s) => {
-    const who = projects
-      .filter((p) => p.stages.includes(s))
-      .map((p) => `<a href="${projectHref(base, p.id)}">${esc(p.name)}</a>`)
-      .join(", ");
-    return `<li><h3>${esc(STAGE_LABEL[s])}</h3><p>${esc(ctx.stageText[s])}</p><p class="meta">${who}</p></li>`;
-  }).join("");
-  const cards = projects
-    .map((p, i) => {
+  const rows = projects
+    .map((p) => {
       const c = ctx.content[p.id];
-      const next = projects[i + 1];
       const demo =
         p.embeddedDemo && ctx.embedded.has(p.id)
-          ? ` · <a href="${esc(p.embeddedDemo)}">Pinned demo</a>`
+          ? `<a href="${esc(p.embeddedDemo)}">Demo</a>`
           : "";
-      return `<li class="card"><h3><a href="${projectHref(base, p.id)}">${esc(p.name)}</a></h3><p>${esc(c.summary)}</p><p class="meta"><code>${esc(p.version)}</code> · <code>${short(p.commit)}</code></p><p><a href="${esc(p.demoPath)}">Guided tour</a>${demo}</p>${next ? `<p class="meta">Feeds into → <a href="${projectHref(base, next.id)}">${esc(next.name)}</a></p>` : ""}</li>`;
+      return `<li class="project"><div class="project-main"><h2><a href="${projectHref(base, p.id)}">${esc(p.name)}</a></h2><p>${esc(c.summary)}</p><p class="meta">${p.stages.map((s) => esc(STAGE_LABEL[s])).join(" · ")} · <code>${short(p.commit)}</code></p></div><p class="links"><a href="${esc(p.demoPath)}">Tour</a>${demo}</p></li>`;
     })
     .join("");
   const body = `
 <h1>Compiler Tooling Lab</h1>
-<p class="subtitle">One reproducible pipeline across four pinned MLIR projects</p>
-<p class="byline">${projects.map((p) => `${esc(p.name)}@<code>${short(p.commit)}</code>`).join(" · ")}<br>Captured with LLVM ${esc(ctx.manifest.toolchain.llvm)}, Python ${esc(ctx.manifest.toolchain.python)}, Node ${esc(ctx.manifest.toolchain.node)}</p>
-<div class="abstract"><p><b>Abstract.</b> Four separate MLIR projects, each pinned to an exact commit and presented as one developer-tooling pipeline: from input source, through diagnostics and MLIR, to pass inspection, debugging and profiling. Every output is either captured from the project's own tool or read verbatim from its repository. Nothing is mocked, and gaps are labelled.</p></div>
-<section aria-labelledby="pipeline"><h2 id="pipeline">The pipeline</h2><ol class="stages">${stages}</ol></section>
-<section aria-labelledby="projects"><h2 id="projects">The projects, in order</h2><ol class="cards">${cards}</ol></section>
-<section aria-labelledby="labels"><h2 id="labels">How output is labelled</h2>
-<ul class="legend">
-<li><span class="badge captured">Captured</span> Produced by running the project's own tool at the pinned commit. The exact command, host and toolchain are shown.</li>
-<li><span class="badge static">Static file</span> A file read verbatim from the repository at the pinned commit.</li>
-<li><span class="badge unavailable">Not available</span> Deliberately missing, with the reason. Never replaced by a mock.</li>
-</ul></section>
-<section aria-labelledby="model"><h2 id="model">Shared data model</h2>
-<p>Every project contributes the same artifact kinds: <code>source</code>, <code>diagnostic</code> (with source locations), <code>ir-snapshot</code>, <code>pass-event</code>, <code>debug-value</code>, <code>profile</code>, plus <code>execution</code> and <code>test-run</code>. The machine-readable data lives in <a href="manifest.json">manifest.json</a> and <a href="artifacts/">artifacts/</a>.</p></section>`;
+<p class="subtitle">Four pinned MLIR projects, one pipeline</p>
+<ol class="projects">${rows}</ol>`;
   return page({
     title: "Compiler Tooling Lab",
     description:
@@ -371,13 +348,13 @@ export function projectPage(ctx, p) {
     : "";
   const embedded = p.embeddedDemo
     ? ctx.embedded.has(p.id)
-      ? ` Or open <a href="${base}${esc(p.embeddedDemo)}">${esc(p.name)} built from ${short(p.commit)}</a>.`
-      : ` The pinned build of ${esc(p.name)} is included in deployed builds (<code>scripts/build-vizmlir.sh</code>); this build does not include it.`
+      ? ` · <a href="${base}${esc(p.embeddedDemo)}">Open the pinned build</a>`
+      : ` · <span class="meta">Pinned build ships with deployed builds only</span>`
     : "";
   const arch = c.architecture
     .map(
       (x) =>
-        `<li><strong>${esc(x.name)}</strong> — ${esc(x.text)} <a href="${esc(gh(p, "blob", x.path))}"><code>${esc(x.path)}</code></a></li>`,
+        `<li class="block"><h3>${esc(x.name)}</h3><p>${esc(x.text)}</p><p class="meta"><a href="${esc(gh(p, "blob", x.path))}"><code>${esc(x.path)}</code></a></p></li>`,
     )
     .join("");
   const run = c.run.map((l) => l.replaceAll("{commit}", p.commit)).join("\n");
@@ -386,22 +363,34 @@ export function projectPage(ctx, p) {
     : "<p>No benchmarks are published for this commit.</p>";
   const body = `
 <h1>${esc(p.name)}</h1>
-${pinLine(ctx, p, base)}
 ${status}
-<section id="purpose" aria-labelledby="h-purpose"><h2 id="h-purpose">Purpose</h2>${c.purpose.map((t) => `<p>${prose(t)}</p>`).join("")}
-<h3>Capabilities</h3><ul>${p.capabilities.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></section>
-<section id="quick-demo" aria-labelledby="h-demo"><h2 id="h-demo">Quick demo</h2><p>${esc(c.quickDemo)} <a href="tour.html">Start the guided tour</a>.${embedded}</p></section>
-<section id="architecture" aria-labelledby="h-arch"><h2 id="h-arch">Architecture</h2><ol class="arch">${arch}</ol></section>
-<section id="run" aria-labelledby="h-run"><h2 id="h-run">Run locally</h2><pre tabindex="0" data-copy aria-label="Commands"><code>${esc(run)}</code></pre><p class="meta">${esc(c.runNote)} Captured with LLVM ${esc(ctx.manifest.toolchain.llvm)}, Python ${esc(ctx.manifest.toolchain.python)}, Node ${esc(ctx.manifest.toolchain.node)}.</p></section>
-<section id="source" aria-labelledby="h-src"><h2 id="h-src">Source</h2><p><a href="${esc(gh(p, "tree"))}">github.com/${esc(p.repo)} at ${short(p.commit)}</a></p></section>
-<section id="docs" aria-labelledby="h-docs"><h2 id="h-docs">Technical docs</h2><p><a href="${esc(gh(p, "blob", p.docsPath))}"><code>${esc(p.docsPath)}</code> at ${short(p.commit)}</a></p></section>
-<section id="tests" aria-labelledby="h-tests"><h2 id="h-tests">Tests and benchmarks</h2>${c.tests.map((id) => renderArtifact(ctx, id, 3)).join("")}${benches}</section>
+<div class="tabbed">
+<div class="panel" id="overview" data-tab="Overview">
+<section id="purpose" class="sec" aria-labelledby="h-purpose"><h2 id="h-purpose">Purpose</h2>${c.purpose.map((t) => `<p>${prose(t)}</p>`).join("")}
+<ul class="blocks caps">${p.capabilities.map((x) => `<li class="block">${esc(x)}</li>`).join("")}</ul></section>
+<section id="quick-demo" class="sec" aria-labelledby="h-demo"><h2 id="h-demo">Quick demo</h2><div class="block cta"><p>${esc(c.quickDemo)}</p><p class="links"><a href="tour.html">Start the guided tour →</a>${embedded}</p></div></section>
+</div>
+<div class="panel" id="design" data-tab="Architecture">
+<section id="architecture" class="sec" aria-labelledby="h-arch"><h2 id="h-arch">Architecture</h2><ol class="blocks arch">${arch}</ol></section>
+</div>
+<div class="panel" id="use" data-tab="Run">
+<section id="run" class="sec" aria-labelledby="h-run"><h2 id="h-run">Run locally</h2><pre tabindex="0" data-copy aria-label="Commands"><code>${esc(run)}</code></pre><p class="meta">${esc(c.runNote)}</p></section>
+<div class="blocks pair">
+<section id="source" class="sec block" aria-labelledby="h-src"><h2 id="h-src">Source</h2><p><a href="${esc(gh(p, "tree"))}">github.com/${esc(p.repo)}</a></p><p class="meta">at <code>${short(p.commit)}</code></p></section>
+<section id="docs" class="sec block" aria-labelledby="h-docs"><h2 id="h-docs">Technical docs</h2><p><a href="${esc(gh(p, "blob", p.docsPath))}"><code>${esc(p.docsPath)}</code></a></p><p class="meta">at <code>${short(p.commit)}</code></p></section>
+</div>
+</div>
+<div class="panel" id="verify" data-tab="Tests">
+<section id="tests" class="sec" aria-labelledby="h-tests"><h2 id="h-tests">Tests and benchmarks</h2>${c.tests.map((id) => renderArtifact(ctx, id, 3)).join("")}${benches}</section>
+</div>
+</div>
+${pinLine(ctx, p, base)}
 ${chainNav(ctx, p, base)}`;
   return page({
     title: `${p.name} · Compiler Tooling Lab`,
     description: c.summary,
     base,
-    current: p.id,
+    project: p.id,
     body,
     ctx,
   });
@@ -426,16 +415,16 @@ export function tourPage(ctx, p) {
       : "";
   const body = `
 <h1>${esc(p.name)}: guided tour</h1>
-${pinLine(ctx, p, base)}
 <p class="lede">${esc(c.quickDemo)}</p>
 ${embedded}
 <ol class="tour">${steps}</ol>
+${pinLine(ctx, p, base)}
 ${chainNav(ctx, p, base, "tour.html")}`;
   return page({
     title: `${p.name} tour · Compiler Tooling Lab`,
     description: c.quickDemo,
     base,
-    current: p.id,
+    project: p.id,
     body,
     ctx,
   });

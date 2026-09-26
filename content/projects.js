@@ -27,15 +27,12 @@
 
 /** One-line description per pipeline stage, for the landing page. */
 export const STAGE_TEXT = {
-  source:
-    "The input program: JSON Schema constraints, written as schema-dialect IR.",
-  diagnostics: "Verifier errors that point at a file, line and column.",
-  mlir: "Custom dialects lowered through standard MLIR dialects to the LLVM dialect.",
-  passes: "What each pass changed, as IR snapshots and structural diffs.",
-  debugging:
-    "Mapping generated code back to ops, SSA values and source fields in LLDB.",
-  profiling:
-    "Where compile time goes per pass, and what runtime numbers exist.",
+  source: "JSON Schema constraints as schema-dialect IR.",
+  diagnostics: "Verifier errors with file, line and column.",
+  mlir: "Custom dialects lowered to the LLVM dialect.",
+  passes: "IR snapshots and structural diffs, per pass.",
+  debugging: "Generated code mapped back to ops and SSA values in LLDB.",
+  profiling: "Compile time per pass, plus runtime numbers where they exist.",
 };
 
 /** @type {Record<string, ProjectContent>} */
