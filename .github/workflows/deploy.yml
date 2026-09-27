@@ -25,13 +25,8 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: wasm32-unknown-unknown
       - run: npm ci
-      # VizMLIR at the manifest pin, not its live site (which tracks its main branch).
-      - run: bash scripts/build-vizmlir.sh "$RUNNER_TEMP/vizmlir-dist"
-      - run: node scripts/build.mjs --vizmlir-dist "$RUNNER_TEMP/vizmlir-dist"
+      - run: node scripts/build.mjs
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

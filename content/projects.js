@@ -155,7 +155,7 @@ export const PROJECTS = {
     tests: ["viz-tests"],
     benchmarks: [],
     quickDemo:
-      "Diff real compiler passes from the other projects with VizMLIR's own WASM parser, then open the pinned build yourself.",
+      "Diff real compiler passes from the other projects with VizMLIR's own WASM parser, then open the app and try it yourself.",
     tour: [
       {
         title: "Diff json-schema-mlir's canonicalization",

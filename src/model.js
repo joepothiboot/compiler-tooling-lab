@@ -46,7 +46,7 @@ export const ARTIFACT_KINDS = /** @type {const} */ ([
  * @property {string} docsPath      Repo-relative path of the technical docs.
  * @property {Stage[]} stages       Pipeline stages this project covers.
  * @property {string[]} capabilities Short capability statements.
- * @property {string} [embeddedDemo] Portal-relative path of a demo built from `commit`.
+ * @property {string} [liveUrl] The project's own hosted app (tracks its main branch, not `commit`).
  */
 
 /**
@@ -180,8 +180,11 @@ export function validateManifest(m) {
       !p.capabilities.every(isStr)
     )
       errs.push(`${at}: capabilities must be non-empty strings`);
-    if (p.embeddedDemo !== undefined && !isStr(p.embeddedDemo))
-      errs.push(`${at}: embeddedDemo must be a string`);
+    if (
+      p.liveUrl !== undefined &&
+      !(isStr(p.liveUrl) && p.liveUrl.startsWith("https://"))
+    )
+      errs.push(`${at}: liveUrl must be an https URL`);
   }
   const covered = new Set(
     m.projects.flatMap((/** @type {any} */ p) => p?.stages ?? []),

@@ -36,7 +36,7 @@
       "commit": "46e767bdc1683170aea7c3220c485f6fc5bf5e20",
       "demoPath": "projects/vizmlir/tour.html",
       "docsPath": "README.md",
-      "embeddedDemo": "demos/vizmlir/",
+      "liveUrl": "https://joepothiboot.github.io/vizmlir/",
       "stages": [
         "passes"
       ],

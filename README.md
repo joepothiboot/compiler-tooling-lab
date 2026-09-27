@@ -14,9 +14,9 @@ developer-tooling pipeline:
 | 3     | [mlir-lldb-tools](https://github.com/joepothiboot/mlir-lldb-tools)   | Debugging                            |
 | 4     | [nano-dsp-mlir](https://github.com/joepothiboot/nano-dsp-mlir)       | MLIR lowering, execution, profiling  |
 
-The site is static HTML, CSS and a few lines of vanilla JS. The only WASM is
-VizMLIR's own parser, built from the pinned commit. No framework, bundler or
-runtime dependency.
+The site is static HTML, CSS and a few lines of vanilla JS. No framework,
+bundler, WASM or runtime dependency. VizMLIR's interactive app is linked at
+[its own site](https://joepothiboot.github.io/vizmlir/).
 
 ## Rules
 
@@ -40,13 +40,8 @@ npx serve dist       # or any static server
 Requires Node 20+. The site builds from the committed `artifacts/`, so no LLVM
 is needed for the day-to-day loop.
 
-To include the pinned VizMLIR app (as deploys do), you need Rust with the
-`wasm32-unknown-unknown` target:
-
-```bash
-bash scripts/build-vizmlir.sh /tmp/vizmlir-dist
-node scripts/build.mjs --vizmlir-dist /tmp/vizmlir-dist
-```
+VizMLIR is the only project with an interactive app; the portal links to its
+own site at https://joepothiboot.github.io/vizmlir/ rather than bundling a copy.
 
 ### Re-capturing artifacts
 

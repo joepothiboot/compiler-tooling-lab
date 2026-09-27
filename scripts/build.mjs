@@ -2,10 +2,7 @@
 // Builds the static site into dist/ (or --out). Fails on any invalid manifest,
 // stale artifact file, or content that references a missing artifact.
 //
-//   node scripts/build.mjs [--out dir] [--vizmlir-dist dir]
-//
-// --vizmlir-dist: a VizMLIR build of the pinned commit (scripts/build-vizmlir.sh),
-// copied to the project's `embeddedDemo` path.
+//   node scripts/build.mjs [--out dir]
 
 import fs from "node:fs";
 import path from "node:path";
@@ -84,15 +81,14 @@ export function loadContext(root = ROOT) {
     content: PROJECTS,
     stageText: STAGE_TEXT,
     artifacts,
-    embedded: new Set(),
   };
 }
 
 /**
- * @param {{ out: string, vizmlirDist?: string, root?: string }} opts
+ * @param {{ out: string, root?: string }} opts
  * @returns {string[]} written files, relative to out
  */
-export function build({ out, vizmlirDist, root = ROOT }) {
+export function build({ out, root = ROOT }) {
   const ctx = loadContext(root);
   fs.rmSync(out, { recursive: true, force: true });
   /** @type {string[]} */
@@ -105,18 +101,6 @@ export function build({ out, vizmlirDist, root = ROOT }) {
     fs.writeFileSync(path.join(out, rel), data);
     written.push(rel);
   };
-
-  if (vizmlirDist) {
-    const viz = ctx.manifest.projects.find((p) => p.id === "vizmlir");
-    if (!viz?.embeddedDemo)
-      throw new Error("manifest: vizmlir has no embeddedDemo path");
-    if (!fs.existsSync(path.join(vizmlirDist, "index.html")))
-      throw new Error(`${vizmlirDist} is not a VizMLIR build`);
-    fs.cpSync(vizmlirDist, path.join(out, viz.embeddedDemo), {
-      recursive: true,
-    });
-    ctx.embedded.add(viz.id);
-  }
 
   write("index.html", landingPage(ctx));
   for (const p of ctx.manifest.projects) {
@@ -154,14 +138,10 @@ if (
     return i >= 0 ? argv[i + 1] : undefined;
   };
   const out = path.resolve(opt("--out") ?? path.join(ROOT, "dist"));
-  const vizmlirDist = opt("--vizmlir-dist") ?? process.env.VIZMLIR_DIST;
   try {
-    const files = build({
-      out,
-      vizmlirDist: vizmlirDist && path.resolve(vizmlirDist),
-    });
+    const files = build({ out });
     console.log(
-      `built ${files.length} files into ${path.relative(process.cwd(), out) || "."}${vizmlirDist ? " (with pinned VizMLIR demo)" : ""}`,
+      `built ${files.length} files into ${path.relative(process.cwd(), out) || "."}`,
     );
   } catch (e) {
     console.error(String(/** @type {Error} */ (e).message));

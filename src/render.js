@@ -15,7 +15,6 @@ import { STAGES } from "./model.js";
  * @property {Record<string, ProjectContent>} content
  * @property {Record<string, string>} stageText
  * @property {Map<string, { artifact: Artifact, project: Project, file: ArtifactFile }>} artifacts
- * @property {Set<string>} embedded  Project ids whose embedded demo is present in this build.
  */
 
 export const STAGE_LABEL = {
@@ -318,10 +317,7 @@ export function landingPage(ctx) {
   const rows = projects
     .map((p) => {
       const c = ctx.content[p.id];
-      const demo =
-        p.embeddedDemo && ctx.embedded.has(p.id)
-          ? `<a href="${esc(p.embeddedDemo)}">Demo</a>`
-          : "";
+      const demo = p.liveUrl ? `<a href="${esc(p.liveUrl)}">Open app</a>` : "";
       return `<li class="project"><div class="project-main"><h2><a href="${projectHref(base, p.id)}">${esc(p.name)}</a></h2><p>${esc(c.summary)}</p><p class="meta">${p.stages.map((s) => esc(STAGE_LABEL[s])).join(" · ")} · <code>${short(p.commit)}</code></p></div><p class="links"><a href="${esc(p.demoPath)}">Tour</a>${demo}</p></li>`;
     })
     .join("");
@@ -346,10 +342,8 @@ export function projectPage(ctx, p) {
   const status = c.status
     ? `<div class="callout" role="note"><p><strong>Status:</strong> ${esc(c.status)}</p>${(c.statusLinks ?? []).map((l) => `<p><a href="${esc(l.href)}">${esc(l.text)}</a></p>`).join("")}</div>`
     : "";
-  const embedded = p.embeddedDemo
-    ? ctx.embedded.has(p.id)
-      ? ` · <a href="${base}${esc(p.embeddedDemo)}">Open the pinned build</a>`
-      : ` · <span class="meta">Pinned build ships with deployed builds only</span>`
+  const live = p.liveUrl
+    ? ` · <a href="${esc(p.liveUrl)}">Open ${esc(p.name)}</a>`
     : "";
   const arch = c.architecture
     .map(
@@ -368,7 +362,7 @@ ${status}
 <div class="panel" id="overview" data-tab="Overview">
 <section id="purpose" class="sec" aria-labelledby="h-purpose"><h2 id="h-purpose">Purpose</h2>${c.purpose.map((t) => `<p>${prose(t)}</p>`).join("")}
 <ul class="blocks caps">${p.capabilities.map((x) => `<li class="block">${esc(x)}</li>`).join("")}</ul></section>
-<section id="quick-demo" class="sec" aria-labelledby="h-demo"><h2 id="h-demo">Quick demo</h2><div class="block cta"><p>${esc(c.quickDemo)}</p><p class="links"><a href="tour.html">Start the guided tour →</a>${embedded}</p></div></section>
+<section id="quick-demo" class="sec" aria-labelledby="h-demo"><h2 id="h-demo">Quick demo</h2><div class="block cta"><p>${esc(c.quickDemo)}</p><p class="links"><a href="tour.html">Start the guided tour →</a>${live}</p></div></section>
 </div>
 <div class="panel" id="design" data-tab="Architecture">
 <section id="architecture" class="sec" aria-labelledby="h-arch"><h2 id="h-arch">Architecture</h2><ol class="blocks arch">${arch}</ol></section>
@@ -409,14 +403,13 @@ export function tourPage(ctx, p) {
       return `<li class="step" id="step-${i + 1}"><h2>${esc(s.title)}</h2><p>${prose(s.text)}</p>${tl}${arts}</li>`;
     })
     .join("");
-  const embedded =
-    p.embeddedDemo && ctx.embedded.has(p.id)
-      ? `<p class="callout"><a href="${base}${esc(p.embeddedDemo)}">Open ${esc(p.name)} built from ${short(p.commit)}</a>. This is not the project's live site, which deploys from its main branch.</p>`
-      : "";
+  const live = p.liveUrl
+    ? `<p class="callout"><a href="${esc(p.liveUrl)}">Open ${esc(p.name)}</a> on its own site. It deploys from the project's main branch, so it can be newer than the pinned ${short(p.commit)} this tour was captured at.</p>`
+    : "";
   const body = `
 <h1>${esc(p.name)}: guided tour</h1>
 <p class="lede">${esc(c.quickDemo)}</p>
-${embedded}
+${live}
 <ol class="tour">${steps}</ol>
 ${pinLine(ctx, p, base)}
 ${chainNav(ctx, p, base, "tour.html")}`;
