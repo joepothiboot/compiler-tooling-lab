@@ -882,6 +882,82 @@ body.has-term {
   outline-offset: 1px;
 }
 
+/* Resize handle: only used for the side-by-side split */
+.term-resize {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  /* The page keeps the left side; the terminal takes the right. */
+  body.term-open {
+    margin-right: var(--term-w, 50vw);
+    padding-bottom: 0;
+  }
+  .term.open {
+    top: 0;
+    bottom: 0;
+    left: auto;
+    right: 0;
+    transform: none;
+    width: var(--term-w, 50vw);
+    border: 0;
+    border-left: 1px solid var(--t-line);
+    border-radius: 0;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .term.open .term-body {
+    flex: 1;
+    height: auto;
+    min-height: 0;
+  }
+  .term:not(.open) {
+    left: auto;
+    right: 16px;
+    transform: none;
+    width: auto;
+  }
+  .term:not(.open) .term-note {
+    display: none;
+  }
+  .term.open .term-resize {
+    display: block;
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    bottom: 0;
+    left: -5px;
+    width: 10px;
+    cursor: col-resize;
+    touch-action: none;
+  }
+  .term-resize::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 4px;
+    width: 2px;
+    background: transparent;
+    transition: background 0.15s;
+  }
+  .term-resize:hover::after,
+  .term-resize:focus-visible::after,
+  .term-dragging .term-resize::after {
+    background: var(--t-prompt);
+  }
+  .term-resize:focus-visible {
+    outline: none;
+  }
+  body.term-dragging {
+    cursor: col-resize;
+    user-select: none;
+  }
+}
+
 @media (max-width: 600px) {
   .term-note {
     display: none;

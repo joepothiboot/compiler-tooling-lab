@@ -154,3 +154,6 @@ if (tour && steps.length > 1) {
     if (e.key === "ArrowLeft") go(current - 1);
   });
 }
+
+// Loaded as an ES module so each script keeps its own scope.
+export {};

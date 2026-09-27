@@ -23,3 +23,6 @@ for (const pre of document.querySelectorAll("pre[data-copy]")) {
   });
   pre.before(button);
 }
+
+// Loaded as an ES module so each script keeps its own scope.
+export {};

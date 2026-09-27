@@ -6,6 +6,12 @@
 /** @typedef {any} Json */
 
 const base = document.body.dataset.base ?? "";
+const root = document.documentElement;
+/** Wide enough for the side-by-side split; must match the CSS breakpoint. */
+const WIDE = "(min-width: 900px)";
+/** Bounds for the terminal's share of the window width. */
+const MIN = 0.25;
+const MAX = 0.75;
 const store = {
   get: (/** @type {string} */ k) => {
     try {
@@ -188,9 +194,46 @@ async function start() {
   input.placeholder = "help, ls, run 1, use vizmlir";
   form.append(el("span", "term-prompt", "$"), input);
   body.append(chips, out, form);
-  dock.append(bar, body);
+  const handle = el("div", "term-resize");
+  handle.setAttribute("role", "separator");
+  handle.setAttribute("aria-orientation", "vertical");
+  handle.setAttribute("aria-label", "Resize terminal");
+  handle.setAttribute("aria-valuemin", String(MIN * 100));
+  handle.setAttribute("aria-valuemax", String(MAX * 100));
+  handle.tabIndex = 0;
+  handle.title = "Drag to resize, double-click to reset";
+  dock.append(handle, bar, body);
   document.body.append(dock);
   document.body.classList.add("has-term");
+
+  // Side-by-side split on wide screens: the terminal's share of the window.
+  const setWidth = (/** @type {number} */ f, save = true) => {
+    const w = Math.min(MAX, Math.max(MIN, f));
+    root.style.setProperty("--term-w", `${(w * 100).toFixed(1)}vw`);
+    handle.setAttribute("aria-valuenow", String(Math.round(w * 100)));
+    if (save) store.set("term-width", String(w));
+    return w;
+  };
+  let width = setWidth(Number(store.get("term-width")) || 0.5, false);
+  handle.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    handle.setPointerCapture(e.pointerId);
+    document.body.classList.add("term-dragging");
+  });
+  handle.addEventListener("pointermove", (e) => {
+    if (handle.hasPointerCapture(e.pointerId))
+      width = setWidth(1 - e.clientX / innerWidth);
+  });
+  const endDrag = () => document.body.classList.remove("term-dragging");
+  handle.addEventListener("pointerup", endDrag);
+  handle.addEventListener("pointercancel", endDrag);
+  handle.addEventListener("dblclick", () => (width = setWidth(0.5)));
+  handle.addEventListener("keydown", (e) => {
+    const d = e.key === "ArrowLeft" ? 0.02 : e.key === "ArrowRight" ? -0.02 : 0;
+    if (!d) return;
+    e.preventDefault();
+    width = setWidth(width + d);
+  });
 
   const print = (/** @type {string} */ text, cls = "") => {
     out.append(el("pre", cls ? `line ${cls}` : "line", text));
@@ -201,6 +244,7 @@ async function start() {
   const setOpen = (/** @type {boolean} */ open, focus = true) => {
     body.hidden = !open;
     dock.classList.toggle("open", open);
+    document.body.classList.toggle("term-open", open);
     toggle.setAttribute("aria-expanded", String(open));
     store.set("term-open", open ? "1" : "0");
     if (open && focus) input.focus({ preventScroll: true });
@@ -343,10 +387,14 @@ async function start() {
     setOpen(body.hidden);
   });
 
-  setOpen(store.get("term-open") === "1", false);
+  const saved = store.get("term-open");
+  setOpen(saved === null ? matchMedia(WIDE).matches : saved === "1", false);
   await use(current);
 }
 
 start().catch(() => {
   // Without the manifest there is nothing to replay; the page stays as is.
 });
+
+// Loaded as an ES module so each script keeps its own scope.
+export {};

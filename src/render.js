@@ -273,10 +273,10 @@ export function page({ title, description, base, project, body, ctx }) {
 <meta name="description" content="${esc(description)}">
 <script>try{if(localStorage.getItem("theme")==="dark")document.documentElement.dataset.theme="dark"}catch{}</script>
 <link rel="stylesheet" href="${base}assets/site.css">
-<script src="${base}assets/copy.js" defer></script>
-<script src="${base}assets/theme.js" defer></script>
-<script src="${base}assets/compact.js" defer></script>
-<script src="${base}assets/terminal.js" defer></script>
+<script type="module" src="${base}assets/copy.js"></script>
+<script type="module" src="${base}assets/theme.js"></script>
+<script type="module" src="${base}assets/compact.js"></script>
+<script type="module" src="${base}assets/terminal.js"></script>
 </head>
 <body data-base="${base}"${project ? ` data-project="${esc(project)}"` : ""}>
 <a class="skip" href="#main">Skip to content</a>

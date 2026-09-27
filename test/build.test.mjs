@@ -168,7 +168,7 @@ test("pages stay small and ship no third-party scripts", () => {
   for (const page of pages()) {
     const html = read(page);
     assert.ok(html.length < 100_000, `${page} is ${html.length} bytes`);
-    for (const m of html.matchAll(/<script src="([^"]+)"/g))
+    for (const m of html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g))
       assert.doesNotMatch(m[1], /^https?:/, page);
   }
 });
