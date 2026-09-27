@@ -1,6 +1,6 @@
-/* Academic "artifact appendix" theme: a paper-like column, numbered sections,
-   booktabs tables, captioned artifacts and provenance as evaluation badges.
-   System fonts only, so the site stays free of runtime dependencies. */
+/* Long-form article theme: one serif reading column, sans headings, booktabs
+   tables, and provenance as evaluation badges. Supporting material opens in a
+   dialog (notes.js). System fonts only, so the site has no runtime dependencies. */
 :root {
   --bg: #fefefd;
   --fg: #1a1a19;
@@ -17,9 +17,8 @@
   --na-fg: #8a5a00;
   --na-bg: #fbf6ea;
   --plot: #1f4a8a;
-  --serif:
-    "Iowan Old Style", Charter, "Bitstream Charter", "Sitka Text", Cambria,
-    Georgia, serif;
+  --sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --serif: Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   color-scheme: light;
 }
@@ -56,19 +55,18 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--fg);
-  font: 17px/1.6 var(--serif);
+  font: 18px/1.65 var(--serif);
   font-kerning: normal;
 }
 main,
 header.site,
 footer.site {
-  max-width: 44rem;
+  max-width: 42rem;
   margin: 0 auto;
   padding: 0 16px;
 }
 main {
   padding-bottom: 3rem;
-  counter-reset: sec art tbl;
 }
 a {
   color: var(--link);
@@ -87,22 +85,23 @@ h1,
 h2,
 h3,
 h4 {
+  font-family: var(--sans);
   font-weight: 600;
   line-height: 1.25;
   text-wrap: balance;
 }
 h1 {
-  font-size: clamp(1.6rem, 4vw, 2.1rem);
-  text-align: center;
-  margin: 1rem 0 0.5rem;
+  font-size: clamp(1.9rem, 5vw, 2.6rem);
+  letter-spacing: -0.01em;
+  margin: 0.25rem 0 0.5rem;
 }
 h2 {
-  font-size: 1.3rem;
-  margin: 2.5rem 0 0.5rem;
+  font-size: 1.45rem;
+  margin: 3.5rem 0 0.5rem;
 }
 h3 {
-  font-size: 1.05rem;
-  margin: 1.5rem 0 0.25rem;
+  font-size: 1.08rem;
+  margin: 2rem 0 0.25rem;
 }
 code {
   font-family: var(--mono);
@@ -115,20 +114,7 @@ code {
 }
 .meta {
   color: var(--muted);
-  font-size: 0.9rem;
-}
-
-/* Numbered sections: "2  The pipeline", "2.1  Capabilities". */
-.sec {
-  counter-reset: sub;
-}
-.sec > h2::before {
-  counter-increment: sec;
-  content: counter(sec) "\2002";
-}
-.sec > h3::before {
-  counter-increment: sub;
-  content: counter(sec) "." counter(sub) "\2002";
+  font: 0.85rem/1.5 var(--sans);
 }
 
 .skip {
@@ -154,9 +140,7 @@ header.site {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  font: 0.85rem var(--serif);
-  font-variant: small-caps;
-  letter-spacing: 0.05em;
+  font: 0.85rem var(--sans);
   color: var(--muted);
   background: none;
   border: 0;
@@ -212,173 +196,82 @@ footer.site::before {
   margin-bottom: 0.5rem;
 }
 
-/* Title block (landing page) */
-.subtitle {
-  text-align: center;
-  font-size: 1.1rem;
-  font-style: italic;
+/* Article */
+.post-head {
+  margin: 1.5rem 0 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--line);
+}
+.kicker {
   margin: 0;
+  font: 600 0.8rem var(--sans);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.dek {
+  font-size: 1.15rem;
+  color: var(--muted);
+  margin: 0.25rem 0 0;
 }
 .byline {
-  text-align: center;
-  color: var(--muted);
-  font-size: 0.9rem;
-  margin: 0.5rem 0 0;
-}
-.abstract {
-  margin: 1.75rem 2rem 0;
-  font-size: 0.95rem;
-  text-align: justify;
-  hyphens: auto;
-}
-.abstract b,
-.runin {
-  font-variant: small-caps;
-  letter-spacing: 0.04em;
-}
-
-/* Blocks: short content laid out as a grid of ruled boxes */
-.blocks {
-  list-style: none;
-  padding: 0;
   margin: 1rem 0 0;
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  font: 0.85rem var(--sans);
+  color: var(--muted);
 }
-.block {
-  border: 1px solid var(--line);
-  border-top: 2px solid var(--rule);
-  background: var(--bg);
-  padding: 0.7rem 0.9rem 0.8rem;
-  font-size: 0.95rem;
-}
-.block h2,
-.block h3 {
-  margin: 0 0 0.3rem;
-  font-size: 1rem;
-}
-.block p {
-  margin: 0.3rem 0 0;
-}
-.block .meta {
-  font-size: 0.85rem;
-}
-.links {
-  font-variant: small-caps;
-  letter-spacing: 0.03em;
-}
-
 ol.stages {
-  counter-reset: stage;
+  padding-left: 1.25rem;
 }
-ol.stages h3::before {
-  counter-increment: stage;
-  content: counter(stage) ".\2002";
-  color: var(--muted);
-  font-weight: 400;
+ol.stages li {
+  margin: 0.3rem 0;
 }
-ol.cards {
-  counter-reset: ref;
-  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
-}
-.card h3::before {
-  counter-increment: ref;
-  content: "[" counter(ref) "]\2002";
-  color: var(--muted);
-  font-weight: 400;
-  font-variant-numeric: tabular-nums;
-}
-ul.caps .block {
-  border-top-width: 1px;
-}
-.pair {
-  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-  margin-top: 2.5rem;
-}
-.pair .sec > h2 {
-  margin: 0 0 0.3rem;
-  font-size: 1rem;
-}
-.cta {
-  background: var(--panel);
-}
-ul.kinds {
-  list-style: none;
-  padding: 0;
-  margin: 1rem 0 0.5rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-ul.kinds li {
-  border: 1px solid var(--line);
-  padding: 0.1rem 0.5rem;
-  background: var(--panel);
-}
-
-/* Landing page: the numbered project list */
-ol.projects {
-  list-style: none;
-  padding: 0;
+.toc {
   margin: 2rem 0 0;
-  counter-reset: ref;
-  border-top: 1.5px solid var(--rule);
-  border-bottom: 1.5px solid var(--rule);
+  padding: 1rem 1.25rem;
+  background: var(--panel);
+  border-left: 3px solid var(--rule);
 }
-li.project {
-  display: grid;
-  grid-template-columns: 2.25rem 1fr auto;
-  gap: 0 1rem;
-  align-items: baseline;
-  padding: 1rem 0;
-}
-li.project + li.project {
-  border-top: 1px solid var(--line);
-}
-li.project::before {
-  counter-increment: ref;
-  content: "[" counter(ref) "]";
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-}
-li.project h2 {
-  font-size: 1.15rem;
-  margin: 0;
-}
-li.project p {
-  margin: 0.2rem 0 0;
-}
-li.project .links {
-  display: flex;
-  gap: 0.9rem;
-  margin: 0;
-}
-
-/* Project facts: one small line at the bottom of the page */
-dl.pin {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.15rem 1.25rem;
-  margin: 3rem 0 0;
+.toc-h {
+  margin: 0 0 0.25rem;
   font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--muted);
 }
-dl.pin > div {
-  display: flex;
-  gap: 0.35rem;
-}
-dl.pin dt {
-  font-variant: small-caps;
-  letter-spacing: 0.05em;
-}
-dl.pin dd {
+.toc ol {
   margin: 0;
+  padding-left: 1.25rem;
 }
-dl.pin + nav.prevnext {
-  margin-top: 0.5rem;
+.toc li {
+  margin: 0.35rem 0;
 }
-
+.toc .meta {
+  display: block;
+}
+section.project,
+section.project > h3 {
+  scroll-margin-top: 1rem;
+}
+section.project > h2 {
+  padding-top: 2rem;
+  border-top: 1.5px solid var(--rule);
+}
+section.project > h2 .num {
+  color: var(--muted);
+  font-weight: 400;
+}
+.facts {
+  font: 0.85rem/1.7 var(--sans);
+  color: var(--muted);
+  margin: 0.75rem 0 1.5rem;
+}
+p.see {
+  margin: -0.4rem 0 0;
+  font: 0.9rem/1.5 var(--sans);
+}
+p.see a::after {
+  content: " →";
+}
 .callout {
   border: 1px solid var(--line);
   border-left: 3px solid var(--na-fg);
@@ -390,6 +283,92 @@ dl.pin + nav.prevnext {
   margin: 0.25rem 0;
 }
 
+/* Notes: an appendix without JS, a modal dialog with it (notes.js) */
+.appendix {
+  margin-top: 4rem;
+  border-top: 1.5px solid var(--rule);
+}
+.note {
+  margin: 2.5rem 0;
+}
+.note h3 {
+  margin-top: 0.1rem;
+}
+.note-from {
+  margin: 0;
+  font: 600 0.75rem var(--sans);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.note ul.caps {
+  padding-left: 1.25rem;
+}
+.note ol.arch {
+  list-style: none;
+  padding: 0;
+}
+.note ol.arch li {
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--line);
+}
+.note ol.arch h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+.note ol.arch p {
+  margin: 0.2rem 0 0;
+}
+.note-dialog {
+  width: min(52rem, calc(100% - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 48px);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+.note-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+.note-dialog::backdrop {
+  background: rgba(20, 20, 18, 0.55);
+}
+.note-bar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.4rem 0.5rem 0;
+}
+.note-close {
+  width: 2.25rem;
+  height: 2.25rem;
+  font: 1.5rem/1 var(--sans);
+  color: var(--muted);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.note-close:hover {
+  color: var(--fg);
+  border-color: var(--line);
+}
+.note-body {
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 0 1.75rem 1.75rem;
+}
+.note-body .note {
+  margin: 0;
+}
+body:has(.note-dialog[open]) {
+  overflow: hidden;
+}
+
 /* Provenance, styled after artifact-evaluation badges */
 .badge {
   display: inline-flex;
@@ -397,8 +376,6 @@ dl.pin + nav.prevnext {
   gap: 0.35em;
   font-size: 0.85rem;
   font-weight: 600;
-  font-variant: small-caps;
-  letter-spacing: 0.05em;
   white-space: nowrap;
 }
 .badge::before {
@@ -421,25 +398,17 @@ dl.pin + nav.prevnext {
   background: none;
   border: 1.5px solid currentColor;
 }
-ul.legend .block p {
-  color: var(--muted);
-}
 
-/* Artifacts are captioned and numbered like figures */
+/* Artifacts are captioned like figures */
 .artifact {
   margin: 1.75rem 0;
 }
 .artifact-title {
   font-size: 0.95rem;
-  font-weight: 400;
   margin: 0 0 0.5rem;
 }
-.artifact-title::before {
-  counter-increment: art;
-  content: "Artifact " counter(art) ".\2002";
-  font-weight: 600;
-}
 .prov {
+  font-family: var(--sans);
   font-size: 0.85rem;
   color: var(--muted);
   margin: 0.5rem 0 0;
@@ -473,9 +442,7 @@ summary {
 }
 .copy {
   display: block;
-  font: 0.8rem var(--serif);
-  font-variant: small-caps;
-  letter-spacing: 0.05em;
+  font: 0.8rem var(--sans);
   margin: 0.5rem 0 -0.25rem auto;
   padding: 0.05rem 0.5rem;
   border: 1px solid var(--line);
@@ -533,11 +500,6 @@ caption {
   padding-bottom: 0.4rem;
   font-size: 0.9rem;
 }
-caption::before {
-  counter-increment: tbl;
-  content: "Table " counter(tbl) ".\2002";
-  font-weight: 600;
-}
 thead tr {
   border-top: 1.5px solid var(--rule);
   border-bottom: 1px solid var(--rule);
@@ -571,155 +533,6 @@ td.plot {
 }
 .depth-3 {
   padding-left: 3.5rem;
-}
-
-ol.tour {
-  padding-left: 1.5rem;
-}
-ol.tour > li {
-  margin-bottom: 2.5rem;
-}
-ol.tour > li::marker {
-  font-weight: 600;
-  color: var(--muted);
-}
-dl.kv {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 0.25rem 1rem;
-}
-dl.kv dt {
-  font-variant: small-caps;
-  letter-spacing: 0.04em;
-  color: var(--muted);
-}
-dl.kv dd {
-  margin: 0;
-}
-
-nav.prevnext {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: baseline;
-  gap: 1rem;
-  margin-top: 3rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--rule);
-  font-variant: small-caps;
-  letter-spacing: 0.03em;
-}
-
-/* Numbers frozen by compact.js before panels are hidden */
-.sec > h2[data-n]::before {
-  counter-increment: none;
-  content: attr(data-n) "\2002";
-}
-.artifact-title[data-n]::before {
-  counter-increment: none;
-  content: "Artifact " attr(data-n) ".\2002";
-}
-caption[data-n]::before {
-  counter-increment: none;
-  content: "Table " attr(data-n) ".\2002";
-}
-
-/* Tabs (project pages) */
-.tablist {
-  display: flex;
-  gap: 0.25rem;
-  overflow-x: auto;
-  border-bottom: 1px solid var(--rule);
-  margin: 0.5rem 0 0;
-  scrollbar-width: none;
-}
-.tablist button,
-.stepper button,
-.pager button {
-  font: 0.95rem var(--serif);
-  font-variant: small-caps;
-  letter-spacing: 0.04em;
-  color: var(--muted);
-  background: none;
-  border: 0;
-  cursor: pointer;
-}
-.tablist button {
-  flex: none;
-  padding: 0.45rem 0.8rem;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-}
-.tablist button:hover {
-  color: var(--fg);
-}
-.tablist button[aria-selected="true"] {
-  color: var(--fg);
-  border-bottom-color: var(--fg);
-  font-weight: 600;
-}
-.is-tabbed .panel > .sec:first-child > h2 {
-  margin-top: 1.5rem;
-}
-.tablist button:focus-visible,
-.stepper button:focus-visible,
-.pager button:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-/* Tour pager */
-.stepper {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  margin: 1.5rem 0 0;
-}
-.stepper button {
-  font-variant: normal;
-  font-variant-numeric: tabular-nums;
-  min-width: 2rem;
-  height: 2rem;
-  border: 1px solid var(--line);
-  background: var(--bg);
-}
-.stepper button:hover {
-  border-color: var(--rule);
-  color: var(--fg);
-}
-.stepper button[aria-current="step"] {
-  background: var(--fg);
-  border-color: var(--fg);
-  color: var(--bg);
-}
-ol.tour.is-paged {
-  margin-top: 1rem;
-}
-ol.tour.is-paged > li {
-  margin-bottom: 0;
-  /* The browser's jump to #step-n keeps the step buttons in view. */
-  scroll-margin-top: 4.5rem;
-}
-.is-tabbed > .panel {
-  scroll-margin-top: 3.5rem;
-}
-.pager {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-top: 1.5rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-.pager button {
-  color: var(--link);
-  padding: 0.3rem 0;
-}
-.pager button:disabled {
-  color: var(--line);
-  cursor: default;
 }
 
 /* Floating terminal (terminal.js). Dark in both themes, like a real one. */
@@ -965,30 +778,18 @@ body.has-term {
   .term-body {
     height: 55vh;
   }
-  nav.prevnext {
-    grid-template-columns: 1fr;
-  }
-  nav.prevnext > span:last-child {
-    text-align: left;
-  }
-  li.project {
-    grid-template-columns: 2.25rem 1fr;
-  }
-  li.project .links {
-    grid-column: 2;
-    margin-top: 0.4rem;
-  }
   body {
-    font-size: 16px;
+    font-size: 17px;
   }
-  .abstract {
-    margin-inline: 0;
-    text-align: left;
+  .note-dialog {
+    width: 100%;
+    max-height: calc(100dvh - 16px);
+    margin-bottom: 0;
+    border-radius: 10px 10px 0 0;
   }
-}
-
-nav.prevnext > span:last-child {
-  text-align: right;
+  .note-body {
+    padding: 0 16px 1.5rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

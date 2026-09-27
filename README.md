@@ -13,7 +13,10 @@ developer-tooling pipeline:
 | 2     | [VizMLIR](https://github.com/joepothiboot/vizmlir)                   | Pass inspection (WASM parser + diff) |
 | 3     | [nano-dsp-mlir](https://github.com/joepothiboot/nano-dsp-mlir)       | MLIR lowering, execution, profiling  |
 
-The site is static HTML, CSS and a few lines of vanilla JS. No framework,
+The site is one static article page: each project is a section of the prose,
+and its captured outputs, architecture, run steps and tests open in a closable
+dialog from links in the text (an appendix when JS is off). It is plain HTML,
+CSS and a few lines of vanilla JS. No framework,
 bundler, WASM or runtime dependency. VizMLIR's interactive app is linked at
 [its own site](https://joepothiboot.github.io/vizmlir/).
 
@@ -60,14 +63,14 @@ clone from local checkouts instead of GitHub.
 ## Architecture
 
 ```
-manifest.json            pins: repo, version, commit, demo path, stages, capabilities
-content/projects.js      page text; every behavioural claim references an artifact id
+manifest.json            pins: repo, version, commit, stages, capabilities
+content/projects.js      article text; every behavioural claim references an artifact id
 artifacts/<id>.json      captured/static/unavailable artifacts per project (generated)
 inputs/                  inputs written for this lab (clearly labelled on the site)
 src/model.js             shared data model: JSDoc types + validators
 src/parse.js             parsers for real tool output (diagnostics, IR dumps, timing, lit, vitest, Mojo/C++ tests)
-src/render.js            HTML rendering (pure functions)
-src/site.css, copy.js    the only shipped CSS/JS
+src/render.js            HTML rendering (pure functions): the article and its notes
+src/site.css, *.js       the only shipped CSS/JS (notes.js opens notes as dialogs)
 scripts/capture.sh|.mjs  clone at pin → build → run tools → artifacts/
 scripts/build.mjs        validate everything → dist/
 scripts/update-manifest.mjs, reconcile.mjs, lib-git.mjs   synchronization

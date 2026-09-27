@@ -39,7 +39,6 @@ export const ARTIFACT_KINDS = /** @type {const} */ ([
  * @property {string} version       `git describe --tags` of `commit`.
  * @property {string | null} releaseTag Newest release tag at or before `commit`, if any.
  * @property {string} commit        Full 40-hex pinned commit. Never a branch.
- * @property {string} demoPath      Portal-relative path of the guided tour.
  * @property {string} docsPath      Repo-relative path of the technical docs.
  * @property {Stage[]} stages       Pipeline stages this project covers.
  * @property {string[]} capabilities Short capability statements.
@@ -152,7 +151,7 @@ export function validateManifest(m) {
       errs.push(`${at}: not an object`);
       continue;
     }
-    for (const k of ["id", "name", "repo", "version", "demoPath", "docsPath"])
+    for (const k of ["id", "name", "repo", "version", "docsPath"])
       if (!isStr(p[k])) errs.push(`${at}: ${k} is required`);
     if (isStr(p.id) && !ID.test(p.id))
       errs.push(`${at}: id must be kebab-case`);

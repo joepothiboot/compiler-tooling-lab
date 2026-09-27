@@ -13,7 +13,6 @@
       "version": "v0.1.0-12-g6f4be81",
       "releaseTag": "v0.1.0",
       "commit": "6f4be813566745002c9bebcb8b4b929bade347cd",
-      "demoPath": "projects/schema-mlir/tour.html",
       "docsPath": "README.md",
       "stages": [
         "source",
@@ -35,7 +34,6 @@
       "version": "v0.3.0-14-gb4f2c91",
       "releaseTag": "v0.3.0",
       "commit": "b4f2c91a9b1734b03f8ea362c97e5597b0654080",
-      "demoPath": "projects/vizmlir/tour.html",
       "docsPath": "README.md",
       "liveUrl": "https://joepothiboot.github.io/vizmlir/",
       "stages": [
@@ -55,7 +53,6 @@
       "version": "v0.1.0-6-gccb09e1",
       "releaseTag": "v0.1.0",
       "commit": "ccb09e1b01eb6ae5dd0fe9e6108eeb90d2a08ae5",
-      "demoPath": "projects/nano-dsp-mlir/tour.html",
       "docsPath": "README.md",
       "stages": [
         "mlir",

@@ -1,5 +1,5 @@
 // Integration test: builds the site into a temp dir and checks the output as a
-// whole — required sections, cross-links, provenance labels, internal links,
+// whole — required sections, in-page links, provenance labels, internal links,
 // pinned external links, and basic accessibility structure.
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -26,24 +26,21 @@ before(() => {
 });
 after(() => fs.rmSync(out, { recursive: true, force: true }));
 
-test("emits a landing page, and a project page and tour per project", () => {
-  assert.ok(files.includes("index.html"));
-  for (const p of manifest.projects) {
-    assert.ok(files.includes(`projects/${p.id}/index.html`), p.id);
-    assert.ok(files.includes(p.demoPath), p.id);
+test("emits one article page and the artifact files", () => {
+  assert.deepEqual(pages().sort(), ["artifacts/index.html", "index.html"]);
+  for (const p of manifest.projects)
     assert.ok(files.includes(`artifacts/${p.id}.json`), p.id);
-  }
 });
 
-test("landing page lists every project in pipeline order", () => {
+test("the article covers every project in pipeline order", () => {
   const html = read("index.html");
   /** @type {number[]} */
   const order = manifest.projects.map((/** @type {any} */ p) =>
-    html.indexOf(`<a href="projects/${p.id}/index.html">`),
+    html.indexOf(`<section class="project" id="${p.id}"`),
   );
   assert.ok(
     order.every((i) => i > 0),
-    "every project linked",
+    "every project has a section",
   );
   assert.deepEqual(
     [...order].sort((a, b) => a - b),
@@ -51,26 +48,17 @@ test("landing page lists every project in pipeline order", () => {
     "projects in order",
   );
   for (const p of manifest.projects)
-    assert.ok(html.includes(`href="${p.demoPath}"`), `${p.id}: tour link`);
+    assert.ok(html.includes(`href="#${p.id}"`), `${p.id}: contents link`);
 });
 
-test("project pages have every required section", () => {
+test("each project links its architecture, run steps and tests", () => {
+  const html = read("index.html");
   for (const p of manifest.projects) {
-    const html = read(`projects/${p.id}/index.html`);
-    for (const id of [
-      "purpose",
-      "quick-demo",
-      "architecture",
-      "run",
-      "source",
-      "docs",
-      "tests",
-    ])
-      assert.match(
-        html,
-        new RegExp(`<section id="${id}"`),
-        `${p.id} lacks #${id}`,
-      );
+    for (const note of ["architecture", "run", "tests"]) {
+      const id = `note-${p.id}-${note}`;
+      assert.ok(html.includes(`href="#${id}"`), `${p.id}: no link to ${note}`);
+      assert.match(html, new RegExp(`<section class="note" id="${id}"`), id);
+    }
     assert.ok(
       html.includes(`https://github.com/${p.repo}/tree/${p.commit}`),
       `${p.id}: source link not pinned`,
@@ -88,23 +76,13 @@ test("project pages have every required section", () => {
   }
 });
 
-test("cross-links follow schema-mlir → VizMLIR → nano-dsp-mlir", () => {
-  const ids = manifest.projects.map((/** @type {any} */ p) => p.id);
-  for (const [i, id] of ids.entries()) {
-    for (const page of [
-      `projects/${id}/index.html`,
-      `projects/${id}/tour.html`,
-    ]) {
-      const html = read(page);
-      const next = /<a rel="next" href="[^"]*projects\/([^/]+)\//.exec(
-        html,
-      )?.[1];
-      const prev = /<a rel="prev" href="[^"]*projects\/([^/]+)\//.exec(
-        html,
-      )?.[1];
-      assert.equal(next, ids[i + 1], `${page} next`);
-      assert.equal(prev, ids[i - 1], `${page} prev`);
-    }
+test("in-page links resolve and ids are unique", () => {
+  for (const page of pages()) {
+    const html = read(page);
+    const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]);
+    assert.equal(new Set(ids).size, ids.length, `${page}: duplicate ids`);
+    for (const m of html.matchAll(/href="#([^"]+)"/g))
+      assert.ok(ids.includes(m[1]), `${page} → #${m[1]}`);
   }
 });
 
@@ -112,7 +90,7 @@ test("every rendered artifact carries a provenance label", () => {
   for (const page of pages()) {
     const html = read(page);
     for (const m of html.matchAll(
-      /<section class="artifact" id="([^"]+)">([\s\S]*?)<\/section>/g,
+      /<section class="artifact" data-artifact="([^"]+)">([\s\S]*?)<\/section>/g,
     ))
       assert.match(
         m[2],
@@ -167,7 +145,8 @@ test("pages have basic accessible structure", () => {
 test("pages stay small and ship no third-party scripts", () => {
   for (const page of pages()) {
     const html = read(page);
-    assert.ok(html.length < 100_000, `${page} is ${html.length} bytes`);
+    // The article carries every captured output as a note, so it gets more room.
+    assert.ok(html.length < 250_000, `${page} is ${html.length} bytes`);
     for (const m of html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g))
       assert.doesNotMatch(m[1], /^https?:/, page);
   }

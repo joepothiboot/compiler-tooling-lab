@@ -1,5 +1,5 @@
 // HTML rendering: pure functions from manifest + content + artifacts to strings.
-// Output is static HTML with one small progressive-enhancement script.
+// Output is one static article page; small scripts enhance it progressively.
 
 import { STAGES } from "./model.js";
 
@@ -47,8 +47,6 @@ const gh = (
   /** @type {"tree" | "blob"} */ kind,
   rel = "",
 ) => `https://github.com/${p.repo}/${kind}/${p.commit}${rel ? `/${rel}` : ""}`;
-const projectHref = (/** @type {string} */ base, /** @type {string} */ id) =>
-  `${base}projects/${id}/index.html`;
 
 /** @param {Project} p @param {import("./model.js").SourceLocation} loc */
 function locationLink(p, loc) {
@@ -93,15 +91,19 @@ function codeBlock(text, label) {
     : pre;
 }
 
-/** @param {Ctx} ctx @param {string} id @param {number} [level] heading level */
+/**
+ * Artifacts can appear in more than one note (a test run is both a tour step
+ * and part of the project's test list), so they carry `data-artifact`, not an id.
+ * @param {Ctx} ctx @param {string} id @param {number} [level] heading level
+ */
 export function renderArtifact(ctx, id, level = 3) {
   const hit = lookup(ctx, id);
   const { artifact: a, project: p } = hit;
   const h = `<h${level} class="artifact-title">${esc(a.title)}</h${level}>`;
   if (a.provenance.mode === "unavailable") {
-    return `<section class="artifact" id="${esc(a.id)}">${h}<div class="unavailable" role="note"><span class="badge unavailable">Not available</span> ${esc(a.provenance.reason)}</div></section>`;
+    return `<section class="artifact" data-artifact="${esc(a.id)}">${h}<div class="unavailable" role="note"><span class="badge unavailable">Not available</span> ${esc(a.provenance.reason)}</div></section>`;
   }
-  return `<section class="artifact" id="${esc(a.id)}">${h}${renderBody(ctx, hit)}${provenance(hit)}</section>`;
+  return `<section class="artifact" data-artifact="${esc(a.id)}">${h}${renderBody(ctx, hit)}${provenance(hit)}</section>`;
 }
 
 /** @param {Ctx} ctx @param {{ artifact: Artifact, project: Project }} hit */
@@ -254,12 +256,12 @@ function renderTimeline(ctx, prefix) {
 }
 
 // ---------------------------------------------------------------------------
-// Pages
+// Page
 
 /**
- * @param {{ title: string, description: string, base: string, project?: string, body: string, ctx: Ctx }} o
+ * @param {{ title: string, description: string, base: string, body: string, ctx: Ctx }} o
  */
-export function page({ title, description, base, project, body, ctx }) {
+export function page({ title, description, base, body, ctx }) {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -271,10 +273,10 @@ export function page({ title, description, base, project, body, ctx }) {
 <link rel="stylesheet" href="${base}assets/site.css">
 <script type="module" src="${base}assets/copy.js"></script>
 <script type="module" src="${base}assets/theme.js"></script>
-<script type="module" src="${base}assets/compact.js"></script>
+<script type="module" src="${base}assets/notes.js"></script>
 <script type="module" src="${base}assets/terminal.js"></script>
 </head>
-<body data-base="${base}"${project ? ` data-project="${esc(project)}"` : ""}>
+<body data-base="${base}">
 <a class="skip" href="#main">Skip to content</a>
 <header class="site"></header>
 <main id="main">
@@ -286,135 +288,158 @@ ${body}
 `;
 }
 
-/** @param {Ctx} ctx @param {Project} p @param {string} base */
-function pinLine(ctx, p, base) {
-  return `<dl class="pin"><div><dt>Version</dt><dd><code>${esc(p.version)}</code></dd></div><div><dt>Commit</dt><dd><a href="${esc(gh(p, "tree"))}"><code>${short(p.commit)}</code></a></dd></div><div><dt>Release</dt><dd>${p.releaseTag ? `<code>${esc(p.releaseTag)}</code>` : "none yet"}</dd></div><div><dt>Stages</dt><dd>${p.stages.map((s) => esc(STAGE_LABEL[s])).join(" · ")}</dd></div></dl>`;
+/**
+ * A note is supporting material (captured output, architecture, run steps)
+ * kept out of the prose. It renders in the appendix; notes.js opens it in a
+ * dialog when its link is clicked.
+ * @typedef {{ id: string, title: string, from: string, body: string }} Note
+ */
+
+/** @param {Note} n */
+const noteLink = (n, label = n.title) => `<a href="#${esc(n.id)}">${label}</a>`;
+
+/** @param {Note} n */
+function renderNote(n) {
+  return `<section class="note" id="${esc(n.id)}" aria-labelledby="${esc(n.id)}-h"><p class="note-from">${esc(n.from)}</p><h3 id="${esc(n.id)}-h">${esc(n.title)}</h3>${n.body}</section>`;
 }
 
-/** @param {Ctx} ctx @param {Project} p @param {string} base */
-function chainNav(ctx, p, base, suffix = "index.html") {
-  const ps = ctx.manifest.projects;
-  const i = ps.findIndex((x) => x.id === p.id);
-  const prev = ps[i - 1];
-  const next = ps[i + 1];
-  const link = (
-    /** @type {Project} */ x,
-    /** @type {string} */ rel,
-    /** @type {string} */ label,
-  ) =>
-    `<a rel="${rel}" href="${base}projects/${x.id}/${suffix}">${label}: ${esc(x.name)}</a>`;
-  const home = `<a href="${base}index.html">All projects</a>`;
-  return `<nav class="prevnext" aria-label="Project chain"><span>${prev ? link(prev, "prev", "Previous") : ""}</span>${home}<span>${next ? link(next, "next", "Next") : ""}</span></nav>`;
-}
+/**
+ * One project as a section of the article, plus the notes it links to.
+ * @param {Ctx} ctx @param {Project} p @param {number} n
+ * @returns {{ html: string, notes: Note[] }}
+ */
+function projectSection(ctx, p, n) {
+  const c = ctx.content[p.id];
+  /** @type {Note[]} */
+  const notes = [];
+  const note = (
+    /** @type {string} */ slug,
+    /** @type {string} */ title,
+    /** @type {string} */ body,
+  ) => {
+    const x = { id: `note-${p.id}-${slug}`, title, from: p.name, body };
+    notes.push(x);
+    return x;
+  };
 
-/** @param {Ctx} ctx */
-export function landingPage(ctx) {
-  const base = "";
-  const { projects } = ctx.manifest;
-  const rows = projects
-    .map((p) => {
-      const c = ctx.content[p.id];
-      const demo = p.liveUrl ? `<a href="${esc(p.liveUrl)}">Open app</a>` : "";
-      return `<li class="project"><div class="project-main"><h2><a href="${projectHref(base, p.id)}">${esc(p.name)}</a></h2><p>${esc(c.summary)}</p><p class="meta">${p.stages.map((s) => esc(STAGE_LABEL[s])).join(" · ")} · <code>${short(p.commit)}</code></p></div><p class="links"><a href="${esc(p.demoPath)}">Tour</a>${demo}</p></li>`;
+  const caps = `<ul class="caps">${p.capabilities.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>`;
+  const arch = c.architecture
+    .map(
+      (x) =>
+        `<li><h4>${esc(x.name)}</h4><p>${esc(x.text)}</p><p class="meta"><a href="${esc(gh(p, "blob", x.path))}"><code>${esc(x.path)}</code></a></p></li>`,
+    )
+    .join("");
+  const archNote = note(
+    "architecture",
+    "Architecture",
+    `${caps}<ol class="arch">${arch}</ol>`,
+  );
+  const run = c.run.map((l) => l.replaceAll("{commit}", p.commit)).join("\n");
+  const runNote = note(
+    "run",
+    "Run it locally",
+    `<pre tabindex="0" data-copy aria-label="Commands"><code>${esc(run)}</code></pre><p class="meta">${esc(c.runNote)}</p>`,
+  );
+  const benches = c.benchmarks.length
+    ? c.benchmarks.map((id) => renderArtifact(ctx, id, 4)).join("")
+    : "<p>No benchmarks are published for this commit.</p>";
+  const testsNote = note(
+    "tests",
+    "Tests and benchmarks",
+    `${c.tests.map((id) => renderArtifact(ctx, id, 4)).join("")}${benches}`,
+  );
+
+  const steps = c.tour
+    .map((s, i) => {
+      const arts = s.artifacts ?? [];
+      let see = "";
+      if (s.timeline || arts.length) {
+        const body =
+          (s.timeline ? renderTimeline(ctx, s.timeline) : "") +
+          arts.map((id) => renderArtifact(ctx, id, 4)).join("");
+        const x = note(`step-${i + 1}`, s.title, body);
+        const what = [
+          ...(s.timeline ? ["pass table"] : []),
+          ...arts.map((id) => lookup(ctx, id).artifact.title),
+        ];
+        see = `<p class="see">${noteLink(x, "Open the captured output")} <span class="meta">${esc(what.join(" · "))}</span></p>`;
+      }
+      return `<h3 id="${esc(p.id)}-${i + 1}">${esc(s.title)}</h3><p>${prose(s.text)}</p>${see}`;
     })
     .join("");
-  const body = `
-<h1>Compiler Tooling Lab</h1>
-<p class="subtitle">Three pinned MLIR projects, one pipeline</p>
-<ol class="projects">${rows}</ol>`;
-  return page({
-    title: "Compiler Tooling Lab",
-    description:
-      "Source → diagnostics → MLIR → pass inspection → profiling, across three pinned MLIR projects.",
-    base,
-    body,
-    ctx,
-  });
-}
 
-/** @param {Ctx} ctx @param {Project} p */
-export function projectPage(ctx, p) {
-  const base = "../../";
-  const c = ctx.content[p.id];
   const status = c.status
     ? `<div class="callout" role="note"><p><strong>Status:</strong> ${esc(c.status)}</p>${(c.statusLinks ?? []).map((l) => `<p><a href="${esc(l.href)}">${esc(l.text)}</a></p>`).join("")}</div>`
     : "";
   const live = p.liveUrl
-    ? ` · <a href="${esc(p.liveUrl)}">Open ${esc(p.name)}</a>`
+    ? `<p class="callout">${esc(p.name)} has a live app: <a href="${esc(p.liveUrl)}">${esc(p.liveUrl.replace(/^https:\/\//, ""))}</a>. It deploys from the project's main branch, so it can be newer than the pinned <code>${short(p.commit)}</code> described here.</p>`
     : "";
-  const arch = c.architecture
-    .map(
-      (x) =>
-        `<li class="block"><h3>${esc(x.name)}</h3><p>${esc(x.text)}</p><p class="meta"><a href="${esc(gh(p, "blob", x.path))}"><code>${esc(x.path)}</code></a></p></li>`,
-    )
-    .join("");
-  const run = c.run.map((l) => l.replaceAll("{commit}", p.commit)).join("\n");
-  const benches = c.benchmarks.length
-    ? c.benchmarks.map((id) => renderArtifact(ctx, id, 3)).join("")
-    : "<p>No benchmarks are published for this commit.</p>";
-  const body = `
-<h1>${esc(p.name)}</h1>
+  const facts = [
+    `<code>${esc(p.version)}</code>`,
+    `<a href="${esc(gh(p, "tree"))}">Source at <code>${short(p.commit)}</code></a>`,
+    `<a href="${esc(gh(p, "blob", p.docsPath))}">${esc(p.docsPath)}</a>`,
+    noteLink(archNote),
+    noteLink(runNote),
+    noteLink(testsNote),
+  ];
+
+  const html = `<section class="project" id="${esc(p.id)}" aria-labelledby="h-${esc(p.id)}">
+<h2 id="h-${esc(p.id)}"><span class="num">${n}.</span> ${esc(p.name)}</h2>
+<p class="dek">${esc(c.summary)}</p>
+<p class="facts">${p.stages.map((s) => esc(STAGE_LABEL[s])).join(" · ")}<br>${facts.join(" · ")}</p>
 ${status}
-<div class="tabbed">
-<div class="panel" id="overview" data-tab="Overview">
-<section id="purpose" class="sec" aria-labelledby="h-purpose"><h2 id="h-purpose">Purpose</h2>${c.purpose.map((t) => `<p>${prose(t)}</p>`).join("")}
-<ul class="blocks caps">${p.capabilities.map((x) => `<li class="block">${esc(x)}</li>`).join("")}</ul></section>
-<section id="quick-demo" class="sec" aria-labelledby="h-demo"><h2 id="h-demo">Quick demo</h2><div class="block cta"><p>${esc(c.quickDemo)}</p><p class="links"><a href="tour.html">Start the guided tour →</a>${live}</p></div></section>
-</div>
-<div class="panel" id="design" data-tab="Architecture">
-<section id="architecture" class="sec" aria-labelledby="h-arch"><h2 id="h-arch">Architecture</h2><ol class="blocks arch">${arch}</ol></section>
-</div>
-<div class="panel" id="use" data-tab="Run">
-<section id="run" class="sec" aria-labelledby="h-run"><h2 id="h-run">Run locally</h2><pre tabindex="0" data-copy aria-label="Commands"><code>${esc(run)}</code></pre><p class="meta">${esc(c.runNote)}</p></section>
-<div class="blocks pair">
-<section id="source" class="sec block" aria-labelledby="h-src"><h2 id="h-src">Source</h2><p><a href="${esc(gh(p, "tree"))}">github.com/${esc(p.repo)}</a></p><p class="meta">at <code>${short(p.commit)}</code></p></section>
-<section id="docs" class="sec block" aria-labelledby="h-docs"><h2 id="h-docs">Technical docs</h2><p><a href="${esc(gh(p, "blob", p.docsPath))}"><code>${esc(p.docsPath)}</code></a></p><p class="meta">at <code>${short(p.commit)}</code></p></section>
-</div>
-</div>
-<div class="panel" id="verify" data-tab="Tests">
-<section id="tests" class="sec" aria-labelledby="h-tests"><h2 id="h-tests">Tests and benchmarks</h2>${c.tests.map((id) => renderArtifact(ctx, id, 3)).join("")}${benches}</section>
-</div>
-</div>
-${pinLine(ctx, p, base)}
-${chainNav(ctx, p, base)}`;
-  return page({
-    title: `${p.name} · Compiler Tooling Lab`,
-    description: c.summary,
-    base,
-    project: p.id,
-    body,
-    ctx,
-  });
+${c.purpose.map((t) => `<p>${prose(t)}</p>`).join("")}
+${live}
+<p>${esc(c.quickDemo)}</p>
+${steps}
+</section>`;
+  return { html, notes };
 }
 
-/** @param {Ctx} ctx @param {Project} p */
-export function tourPage(ctx, p) {
-  const base = "../../";
-  const c = ctx.content[p.id];
-  const steps = c.tour
-    .map((s, i) => {
-      const arts = (s.artifacts ?? [])
-        .map((id) => renderArtifact(ctx, id, 3))
-        .join("");
-      const tl = s.timeline ? renderTimeline(ctx, s.timeline) : "";
-      return `<li class="step" id="step-${i + 1}"><h2>${esc(s.title)}</h2><p>${prose(s.text)}</p>${tl}${arts}</li>`;
-    })
+/** @param {Ctx} ctx */
+export function articlePage(ctx) {
+  const { projects } = ctx.manifest;
+  const sections = projects.map((p, i) => projectSection(ctx, p, i + 1));
+  const captured = [...ctx.artifacts.values()]
+    .map((h) => h.file.capture.capturedAt)
+    .sort()
+    .at(-1);
+  const stages = STAGES.map((s) => {
+    const by = projects.filter((p) => p.stages.includes(s));
+    return `<li><strong>${esc(STAGE_LABEL[s])}.</strong> ${esc(ctx.stageText[s])} <span class="meta">${by.map((p) => `<a href="#${esc(p.id)}">${esc(p.name)}</a>`).join(", ")}</span></li>`;
+  }).join("");
+  const toc = projects
+    .map(
+      (p) =>
+        `<li><a href="#${esc(p.id)}">${esc(p.name)}</a> <span class="meta">${esc(ctx.content[p.id].summary)}</span></li>`,
+    )
     .join("");
-  const live = p.liveUrl
-    ? `<p class="callout"><a href="${esc(p.liveUrl)}">Open ${esc(p.name)}</a> on its own site. It deploys from the project's main branch, so it can be newer than the pinned ${short(p.commit)} this tour was captured at.</p>`
-    : "";
-  const body = `
-<h1>${esc(p.name)}: guided tour</h1>
-<p class="lede">${esc(c.quickDemo)}</p>
-${live}
-<ol class="tour">${steps}</ol>
-${pinLine(ctx, p, base)}
-${chainNav(ctx, p, base, "tour.html")}`;
+  const notes = sections
+    .flatMap((s) => s.notes)
+    .map(renderNote)
+    .join("");
+  const body = `<article class="post">
+<header class="post-head">
+<p class="kicker">MLIR · developer tooling</p>
+<h1>Compiler Tooling Lab</h1>
+<p class="dek">Three pinned MLIR projects, read as one pipeline: source, diagnostics, MLIR, pass inspection, profiling.</p>
+<p class="byline">${captured ? `Outputs captured <time datetime="${esc(captured.slice(0, 10))}">${esc(captured.slice(0, 10))}</time> · ` : ""}LLVM ${esc(ctx.manifest.toolchain.llvm)}</p>
+</header>
+<p>This page follows three separate compiler projects through the stages of a developer-tooling pipeline. Each project is pinned to one commit. Every output quoted below was captured from the project's own tools at that commit, or is a file shown verbatim from its repository. Where something could not be captured, the page says so instead of filling the gap.</p>
+<ol class="stages">${stages}</ol>
+<nav class="toc" aria-label="Contents"><h2 class="toc-h">Contents</h2><ol>${toc}</ol></nav>
+${sections.map((s) => s.html).join("\n")}
+</article>
+<section class="appendix" id="notes" aria-labelledby="h-notes">
+<h2 id="h-notes">Appendix: captured outputs and notes</h2>
+<p class="meta">The material linked from the article above, in order.</p>
+${notes}
+</section>`;
   return page({
-    title: `${p.name} tour · Compiler Tooling Lab`,
-    description: c.quickDemo,
-    base,
-    project: p.id,
+    title: "Compiler Tooling Lab",
+    description:
+      "Source → diagnostics → MLIR → pass inspection → profiling, across three pinned MLIR projects.",
+    base: "",
     body,
     ctx,
   });
@@ -429,7 +454,7 @@ export function artifactIndex(/** @type {Ctx} */ ctx) {
     title: "Artifacts · Compiler Tooling Lab",
     description: "Machine-readable artifacts per project.",
     base: "../",
-    body: `<h1>Artifacts</h1><p>One JSON file per project, validated against the shared model in <code>src/model.js</code>.</p><ul>${items}</ul>`,
+    body: `<h1>Artifacts</h1><p>One JSON file per project, validated against the shared model in <code>src/model.js</code>. <a href="../index.html">Back to the article</a>.</p><ul>${items}</ul>`,
     ctx,
   });
 }

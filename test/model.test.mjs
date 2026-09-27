@@ -19,7 +19,6 @@ const project = (
   version: "v1.0.0",
   releaseTag: "v1.0.0",
   commit: SHA,
-  demoPath: `projects/${id}/tour.html`,
   docsPath: "README.md",
   stages,
   capabilities: ["does a thing"],

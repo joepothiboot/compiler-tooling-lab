@@ -8,12 +8,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { validateArtifactFile, validateManifest } from "../src/model.js";
-import {
-  artifactIndex,
-  landingPage,
-  projectPage,
-  tourPage,
-} from "../src/render.js";
+import { artifactIndex, articlePage } from "../src/render.js";
 import { PROJECTS, STAGE_TEXT } from "../content/projects.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -67,10 +62,6 @@ export function loadContext(root = ROOT) {
           if (ref && !artifacts.has(ref))
             errs.push(`${pe.id}: references missing snapshot ${ref}`);
     }
-    if (project.demoPath !== `projects/${project.id}/tour.html`)
-      errs.push(
-        `${project.id}: demoPath must be projects/${project.id}/tour.html`,
-      );
   }
   if (errs.length)
     throw new Error(
@@ -102,10 +93,8 @@ export function build({ out, root = ROOT }) {
     written.push(rel);
   };
 
-  write("index.html", landingPage(ctx));
+  write("index.html", articlePage(ctx));
   for (const p of ctx.manifest.projects) {
-    write(`projects/${p.id}/index.html`, projectPage(ctx, p));
-    write(p.demoPath, tourPage(ctx, p));
     write(
       `artifacts/${p.id}.json`,
       fs.readFileSync(path.join(root, "artifacts", `${p.id}.json`)),
@@ -116,10 +105,7 @@ export function build({ out, root = ROOT }) {
   write("assets/site.css", fs.readFileSync(path.join(root, "src/site.css")));
   write("assets/copy.js", fs.readFileSync(path.join(root, "src/copy.js")));
   write("assets/theme.js", fs.readFileSync(path.join(root, "src/theme.js")));
-  write(
-    "assets/compact.js",
-    fs.readFileSync(path.join(root, "src/compact.js")),
-  );
+  write("assets/notes.js", fs.readFileSync(path.join(root, "src/notes.js")));
   write(
     "assets/terminal.js",
     fs.readFileSync(path.join(root, "src/terminal.js")),
