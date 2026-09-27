@@ -88,7 +88,7 @@ test("project pages have every required section", () => {
   }
 });
 
-test("cross-links follow schema-mlir → VizMLIR → mlir-lldb-tools → nano-dsp-mlir", () => {
+test("cross-links follow schema-mlir → VizMLIR → nano-dsp-mlir", () => {
   const ids = manifest.projects.map((/** @type {any} */ p) => p.id);
   for (const [i, id] of ids.entries()) {
     for (const page of [

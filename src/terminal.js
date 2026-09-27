@@ -124,8 +124,6 @@ function outputOf(/** @type {Json} */ a) {
       }
       return out;
     }
-    case "debug-value":
-      return [{ text: `${a.name}: ${a.type} = ${a.summary}` }];
   }
   return [{ text: JSON.stringify(a, null, 2) }];
 }

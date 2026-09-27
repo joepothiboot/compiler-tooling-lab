@@ -47,24 +47,6 @@
       ]
     },
     {
-      "id": "mlir-lldb-tools",
-      "name": "mlir-lldb-tools",
-      "repo": "joepothiboot/mlir-lldb-tools",
-      "version": "g51b00b3",
-      "releaseTag": null,
-      "commit": "51b00b37fae9dc47a6601d122d3d28c5453f8aee",
-      "demoPath": "projects/mlir-lldb-tools/tour.html",
-      "docsPath": "README.md",
-      "stages": [
-        "debugging"
-      ],
-      "capabilities": [
-        "LLDB commands keyed by MLIR op and SSA value (design; not yet run end to end)",
-        "Provenance invariant: passes may enrich locations, never erase them",
-        "Narrow DAP server for VS Code"
-      ]
-    },
-    {
       "id": "nano-dsp-mlir",
       "name": "nano-dsp-mlir",
       "repo": "joepothiboot/nano-dsp-mlir",
@@ -80,7 +62,7 @@
       ],
       "capabilities": [
         "dsp dialect: add, relu, matmul, conv2d with shape verifiers",
-        "dsp → linalg.generic conversion",
+        "dsp \u2192 linalg.generic conversion",
         "Differential execution tests via mlir-runner",
         "Compile-time pass timing (runtime benchmarks not yet measured)"
       ]

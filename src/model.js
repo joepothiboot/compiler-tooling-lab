@@ -8,7 +8,6 @@ export const STAGES = /** @type {const} */ ([
   "diagnostics",
   "mlir",
   "passes",
-  "debugging",
   "profiling",
 ]);
 
@@ -16,7 +15,6 @@ export const STAGES = /** @type {const} */ ([
 export const CHAIN = /** @type {const} */ ([
   "schema-mlir",
   "vizmlir",
-  "mlir-lldb-tools",
   "nano-dsp-mlir",
 ]);
 
@@ -25,7 +23,6 @@ export const ARTIFACT_KINDS = /** @type {const} */ ([
   "diagnostic",
   "ir-snapshot",
   "pass-event",
-  "debug-value",
   "profile",
   "execution",
   "test-run",
@@ -101,7 +98,6 @@ export const ARTIFACT_KINDS = /** @type {const} */ ([
  * }} PassEventArtifact
  * `before`/`after` are ids of ir-snapshot artifacts (in any project file; ids are global).
  */
-/** @typedef {ArtifactBase & { kind: "debug-value", name: string, type: string, summary: string, location: SourceLocation | null }} DebugValueArtifact */
 /** @typedef {{ name: string, value: number, percent: number, depth: number }} ProfileEntry */
 /** @typedef {ArtifactBase & { kind: "profile", metric: string, unit: string, total: number, entries: ProfileEntry[] }} ProfileArtifact */
 /** @typedef {ArtifactBase & { kind: "execution", exitCode: number, stdout: string, expected?: string[] }} ExecutionArtifact */
@@ -110,7 +106,7 @@ export const ARTIFACT_KINDS = /** @type {const} */ ([
 
 /**
  * @typedef {SourceArtifact | DiagnosticArtifact | IRSnapshotArtifact | PassEventArtifact
- *   | DebugValueArtifact | ProfileArtifact | ExecutionArtifact | TestRunArtifact} Artifact
+ *   | ProfileArtifact | ExecutionArtifact | TestRunArtifact} Artifact
  */
 
 /**
@@ -216,7 +212,6 @@ const KIND_FIELDS = {
   diagnostic: { tool: "string", exitCode: "number", entries: "array" },
   "ir-snapshot": { stage: "string", text: "string" },
   "pass-event": { pass: "string", index: "number", changed: "boolean" },
-  "debug-value": { name: "string", type: "string", summary: "string" },
   profile: {
     metric: "string",
     unit: "string",
@@ -281,8 +276,6 @@ export function validateArtifact(a) {
       else if (e.location !== null) checkLocation(e.location, at, errs);
     }
   }
-  if (a.kind === "debug-value" && a.location !== null)
-    checkLocation(a.location, at, errs);
   if (a.kind === "pass-event") {
     for (const k of ["before", "after"])
       if (a[k] !== null && !isStr(a[k]))

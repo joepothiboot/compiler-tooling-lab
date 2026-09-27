@@ -30,8 +30,7 @@ const goodManifest = () => ({
   projects: [
     project(CHAIN[0], ["source", "diagnostics", "mlir"]),
     project(CHAIN[1], ["passes"]),
-    project(CHAIN[2], ["debugging"]),
-    project(CHAIN[3], ["profiling"]),
+    project(CHAIN[2], ["profiling"]),
   ],
 });
 
@@ -55,11 +54,11 @@ test("manifest rejects branch pins, short SHAs and wrong chain order", () => {
 
 test("manifest requires every pipeline stage to be covered", () => {
   const m = goodManifest();
-  m.projects[3].stages = ["mlir"];
+  m.projects[2].stages = ["mlir"];
   assert.deepEqual(validateManifest(m), [
     'no project covers stage "profiling"',
   ]);
-  assert.equal(STAGES.length, 6);
+  assert.equal(STAGES.length, 5);
 });
 
 test("captured artifacts must record their command; static ones their path", () => {
@@ -93,7 +92,7 @@ test("unavailable artifacts need a reason and nothing else", () => {
   assert.deepEqual(
     validateArtifact({
       id: "x",
-      kind: "debug-value",
+      kind: "profile",
       title: "t",
       provenance: { mode: "unavailable", reason: "not built" },
     }),
@@ -102,7 +101,7 @@ test("unavailable artifacts need a reason and nothing else", () => {
   assert.ok(
     validateArtifact({
       id: "x",
-      kind: "debug-value",
+      kind: "profile",
       title: "t",
       provenance: { mode: "unavailable" },
     }).length,

@@ -1,9 +1,9 @@
 # compiler-tooling-lab
 
-One integration portal for four separate MLIR projects, presented as a single
+One integration portal for three separate MLIR projects, presented as a single
 developer-tooling pipeline:
 
-**source → diagnostics → MLIR → pass inspection → debugging → profiling**
+**source → diagnostics → MLIR → pass inspection → profiling**
 
 **Live site:** https://joepothiboot.github.io/compiler-tooling-lab/
 
@@ -11,8 +11,7 @@ developer-tooling pipeline:
 | ----- | -------------------------------------------------------------------- | ------------------------------------ |
 | 1     | [json-schema-mlir](https://github.com/joepothiboot/json-schema-mlir) | Source, diagnostics, MLIR lowering   |
 | 2     | [VizMLIR](https://github.com/joepothiboot/vizmlir)                   | Pass inspection (WASM parser + diff) |
-| 3     | [mlir-lldb-tools](https://github.com/joepothiboot/mlir-lldb-tools)   | Debugging                            |
-| 4     | [nano-dsp-mlir](https://github.com/joepothiboot/nano-dsp-mlir)       | MLIR lowering, execution, profiling  |
+| 3     | [nano-dsp-mlir](https://github.com/joepothiboot/nano-dsp-mlir)       | MLIR lowering, execution, profiling  |
 
 The site is static HTML, CSS and a few lines of vanilla JS. No framework,
 bundler, WASM or runtime dependency. VizMLIR's interactive app is linked at
@@ -76,7 +75,7 @@ test/                    unit tests + an integration test over the built site
 
 ### Shared data model
 
-All four projects contribute the same artifact kinds, defined in
+All three projects contribute the same artifact kinds, defined in
 [`src/model.js`](src/model.js):
 
 | Kind          | Carries                                                                   |
@@ -85,7 +84,6 @@ All four projects contribute the same artifact kinds, defined in
 | `diagnostic`  | Tool, exit code, entries of severity + message + `SourceLocation \| null` |
 | `ir-snapshot` | IR text, dialect stage, optional VizMLIR graph summary                    |
 | `pass-event`  | Pass name, order, changed?, before/after snapshot ids, optional diff      |
-| `debug-value` | Name, type, rendered value, location                                      |
 | `profile`     | Metric, unit, total, nested entries                                       |
 | `execution`   | Exit code, stdout, expected lines                                         |
 | `test-run`    | Runner, pass/fail/error/skip counts, log                                  |

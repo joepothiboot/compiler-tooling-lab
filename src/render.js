@@ -22,7 +22,6 @@ export const STAGE_LABEL = {
   diagnostics: "Diagnostics",
   mlir: "MLIR",
   passes: "Pass inspection",
-  debugging: "Debugging",
   profiling: "Profiling",
 };
 
@@ -130,8 +129,6 @@ function renderBody(ctx, { artifact: a, project: p }) {
     }
     case "pass-event":
       return renderPassEvent(ctx, a);
-    case "debug-value":
-      return `<dl class="kv"><dt>Name</dt><dd><code>${esc(a.name)}</code></dd><dt>Type</dt><dd><code>${esc(a.type)}</code></dd><dt>Value</dt><dd><code>${esc(a.summary)}</code></dd>${a.location ? `<dt>Location</dt><dd>${locationLink(p, a.location)}</dd>` : ""}</dl>`;
     case "profile": {
       const max = Math.max(...a.entries.map((e) => e.percent)) || 1;
       const rows = a.entries
@@ -323,12 +320,12 @@ export function landingPage(ctx) {
     .join("");
   const body = `
 <h1>Compiler Tooling Lab</h1>
-<p class="subtitle">Four pinned MLIR projects, one pipeline</p>
+<p class="subtitle">Three pinned MLIR projects, one pipeline</p>
 <ol class="projects">${rows}</ol>`;
   return page({
     title: "Compiler Tooling Lab",
     description:
-      "Source → diagnostics → MLIR → pass inspection → debugging → profiling, across four pinned MLIR projects.",
+      "Source → diagnostics → MLIR → pass inspection → profiling, across three pinned MLIR projects.",
     base,
     body,
     ctx,

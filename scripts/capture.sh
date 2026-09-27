@@ -55,7 +55,6 @@ build() { # id
   case "$1" in
     schema-mlir) (cd "$dir" && MLIR_INSTALL="$LLVM_PREFIX" bash build.sh) ;;
     nano-dsp-mlir) (cd "$dir" && MLIR_DIR="$LLVM_PREFIX/lib/cmake/mlir" bash test.sh) ;;
-    mlir-lldb-tools) python3 -m venv "$WORK/venv-lldb" && "$WORK/venv-lldb/bin/pip" install -q -e "$dir[dev]" ;;
     vizmlir) (cd "$dir" && npm ci --no-audit --no-fund && npm run wasm) ;;
   esac >"$log" 2>&1 || echo "!! $1 build exited non-zero; capture will record what is missing (see $log)"
 }

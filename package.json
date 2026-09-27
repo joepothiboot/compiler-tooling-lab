@@ -2,7 +2,7 @@
   "name": "compiler-tooling-lab",
   "version": "0.1.0",
   "private": true,
-  "description": "Integration portal for json-schema-mlir, VizMLIR, mlir-lldb-tools and nano-dsp-mlir.",
+  "description": "Integration portal for json-schema-mlir, VizMLIR and nano-dsp-mlir.",
   "type": "module",
   "engines": {
     "node": ">=20"

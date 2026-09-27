@@ -1,4 +1,4 @@
-// Pure parsers for real tool output (mlir-opt-style drivers, lit, pytest).
+// Pure parsers for real tool output (mlir-opt-style drivers, lit).
 // Used by scripts/capture.mjs; unit-tested against verbatim output in test/.
 
 const DIAG_LINE = /^(.+?):(\d+):(\d+): (error|warning|note|remark): (.*)$/;
@@ -99,23 +99,5 @@ export function parseLit(out) {
     errors: 0,
     skipped: n("Unsupported"),
     log: [...results, "", ...summary].join("\n").trim(),
-  };
-}
-
-/**
- * Parses the final summary line of `pytest -q`.
- * @param {string} out
- */
-export function parsePytest(out) {
-  const lines = out.trim().split("\n");
-  const summary = lines.at(-1) ?? "";
-  /** @param {string} w */
-  const n = (w) => Number(new RegExp(`(\\d+) ${w}\\b`).exec(summary)?.[1] ?? 0);
-  return {
-    passed: n("passed"),
-    failed: n("failed"),
-    errors: n("errors?"),
-    skipped: n("skipped") + n("deselected"),
-    log: lines.slice(-25).join("\n"),
   };
 }

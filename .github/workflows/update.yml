@@ -14,7 +14,7 @@ on:
         description: Project to re-pin
         required: true
         type: choice
-        options: [schema-mlir, vizmlir, mlir-lldb-tools, nano-dsp-mlir]
+        options: [schema-mlir, vizmlir, nano-dsp-mlir]
       ref:
         description: Release tag or full 40-character commit SHA (branches are refused)
         required: true

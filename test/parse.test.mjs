@@ -5,7 +5,6 @@ import {
   parseDiagnostics,
   parseIRDumps,
   parseLit,
-  parsePytest,
   parseTiming,
 } from "../src/parse.js";
 
@@ -73,11 +72,4 @@ Total Discovered Tests: 3
   assert.equal(r.passed, 2);
   assert.equal(r.failed, 1);
   assert.match(r.log, /FAIL: .*schema-canonicalize/);
-});
-
-test("parsePytest reads the summary line including collection errors", () => {
-  const r = parsePytest(
-    "... \n=== 1 passed, 1 deselected, 2 errors in 0.91s ===",
-  );
-  assert.deepEqual([r.passed, r.failed, r.errors, r.skipped], [1, 0, 2, 1]);
 });

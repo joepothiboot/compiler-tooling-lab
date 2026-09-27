@@ -17,7 +17,6 @@ import {
   parseDiagnostics,
   parseIRDumps,
   parseLit,
-  parsePytest,
   parseTiming,
 } from "../src/parse.js";
 
@@ -503,102 +502,6 @@ function captureNanoDsp() {
   return out;
 }
 
-/** @returns {Artifact[]} */
-function captureLldbTools() {
-  const dir = srcDir("mlir-lldb-tools");
-  const py = path.join(WORK, "venv-lldb/bin/python");
-  // pip install -e does not expose the top-level `schemac` package at this commit.
-  const env = { PYTHONPATH: `${dir}:${dir}/src` };
-  /** @type {Artifact[]} */
-  const out = [
-    staticSource(
-      dir,
-      "examples/audioframe.schema",
-      "lldb-schema-source",
-      "Example schema (toy language)",
-      "text",
-    ),
-  ];
-
-  const outFile = path.join(TMP, "audioframe.mlir");
-  const emitArgs = [
-    "-c",
-    "import sys; from schemac.cli import main; sys.argv[0] = 'schemac'; main()",
-    "emit-mlir",
-    "examples/audioframe.schema",
-    "-o",
-    outFile,
-  ];
-  const emit = run(py, emitArgs, { cwd: dir, env });
-  const command = `PYTHONPATH=.:src ${display("python", emitArgs)}`;
-  if (emit.code === 0) {
-    out.push({
-      id: "lldb-toy-mlir",
-      kind: "ir-snapshot",
-      title: "toy_schema IR emitted by schemac",
-      stage: "toy_schema",
-      text: fs.readFileSync(outFile, "utf8").trim(),
-      provenance: { mode: "captured", command },
-    });
-  } else {
-    const last = emit.stderr.trim().split("\n").at(-1) ?? "no output";
-    out.push({
-      id: "lldb-frontend-diagnostic",
-      kind: "diagnostic",
-      title: "schemac front-end on its own example",
-      tool: "schemac",
-      exitCode: emit.code,
-      entries: [
-        { severity: "error", message: relativize(last), location: null },
-      ],
-      provenance: { mode: "captured", command },
-    });
-  }
-
-  out.push(
-    staticSource(
-      dir,
-      "fixtures/audioframe_validate.cpp",
-      "lldb-generated-cpp",
-      "Checked-in generated C++ fixture (not regenerated)",
-      "cpp",
-    ),
-  );
-
-  const testArgs = [
-    "-m",
-    "pytest",
-    "-m",
-    "not needs_lldb and not needs_mlir",
-    "-q",
-    "-p",
-    "no:cacheprovider",
-    "--continue-on-collection-errors",
-  ];
-  const t = run(py, testArgs, { cwd: dir, env });
-  out.push({
-    id: "lldb-tests",
-    kind: "test-run",
-    title: "Toolchain-free pytest tier",
-    runner: "pytest",
-    ...withLog(parsePytest(t.stdout + t.stderr)),
-    provenance: {
-      mode: "captured",
-      command: `PYTHONPATH=.:src ${display("python", testArgs)}`,
-    },
-  });
-
-  out.push(
-    unavailable(
-      "lldb-debug-session",
-      "debug-value",
-      "LLDB session with MLIR-aware printers",
-      "The project states it has not been built or run end to end, and no LLDB session has been captured. The README transcript is illustrative, so it is not reproduced here as output.",
-    ),
-  );
-  return out;
-}
-
 /** @returns {Promise<Artifact[]>} */
 async function captureVizmlir() {
   const dir = srcDir("vizmlir");
@@ -741,13 +644,7 @@ function toolchain() {
   ) => re.exec(run(cmd, a).stdout + run(cmd, a).stderr)?.[1] ?? "unknown";
   return {
     llvm: v(tool("mlir-opt"), ["--version"], /LLVM version ([\w.]+)/),
-    python: v(
-      fs.existsSync(path.join(WORK, "venv-lldb/bin/python"))
-        ? path.join(WORK, "venv-lldb/bin/python")
-        : "python3",
-      ["--version"],
-      /Python ([\w.]+)/,
-    ),
+    python: v("python3", ["--version"], /Python ([\w.]+)/),
     node: process.version,
     rustc: v("rustc", ["--version"], /rustc ([\w.]+)/),
   };
@@ -757,7 +654,6 @@ function toolchain() {
 const CAPTURES = {
   "schema-mlir": captureSchemaMlir,
   "nano-dsp-mlir": captureNanoDsp,
-  "mlir-lldb-tools": captureLldbTools,
   vizmlir: captureVizmlir, // last: diffs the IR captured by the others
 };
 

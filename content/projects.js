@@ -31,7 +31,6 @@ export const STAGE_TEXT = {
   diagnostics: "Verifier errors with file, line and column.",
   mlir: "Custom dialects lowered to the LLVM dialect.",
   passes: "IR snapshots and structural diffs, per pass.",
-  debugging: "Generated code mapped back to ops and SSA values in LLDB.",
   profiling: "Compile time per pass, plus runtime numbers where they exist.",
 };
 
@@ -175,84 +174,6 @@ export const PROJECTS = {
         title: "Diff nano-dsp-mlir's dsp → linalg conversion",
         text: "The same diff applied to the other compiler: dsp ops become linalg.generic with affine maps.",
         artifacts: ["viz-nano-linalg-diff"],
-      },
-    ],
-  },
-
-  "mlir-lldb-tools": {
-    summary:
-      "LLDB commands, printers and a DAP server keyed by MLIR ops and SSA values (not yet run end to end).",
-    purpose: [
-      "mlir-lldb-tools aims to let LLDB work in terms of MLIR ops and SSA values for a small schema compiler (schemac): breakpoints set by source field, pretty-printers that read real memory, and a narrow DAP server for VS Code.",
-      "Its central design rule is that a lowering pass may enrich location information but never erase it. Every metadata layer is tagged real or synthetic, so an illustration cannot be passed off as tool output.",
-    ],
-    status:
-      "Upstream states this project has not been built or run end to end. At the pinned commit the schemac front end rejects its own example, upstream CI failed, and this capture found 1 toolchain-free test passing while 2 test modules could not be collected without an importable LLDB.",
-    statusLinks: [
-      {
-        text: "Upstream CI run at the pinned commit (failed)",
-        href: "https://github.com/joepothiboot/mlir-lldb-tools/actions/runs/36238464285",
-      },
-    ],
-    architecture: [
-      {
-        name: "schemac",
-        path: "schemac/cli.py",
-        text: "Lexer, parser, AST, folding/DCE passes with provenance; emits C++, MLIR and side-car metadata.",
-      },
-      {
-        name: "toy_schema dialect",
-        path: "mlir/include/ToySchema/ToySchemaOps.td",
-        text: "Out-of-tree dialect and schemac-opt (needs an MLIR install).",
-      },
-      {
-        name: "Runtime",
-        path: "runtime/include/mlir_rt.h",
-        text: "Standard-layout C++ structs with a magic field written last.",
-      },
-      {
-        name: "LLDB layer",
-        path: "src/mlir_lldb_tools/commands/breakfield.py",
-        text: "Commands and printers built on the SB API; addresses come from DWARF.",
-      },
-      {
-        name: "DAP server",
-        path: "src/mlir_lldb_tools/dap/server.py",
-        text: "A hand-written, deliberately narrow debug adapter.",
-      },
-    ],
-    run: [
-      "git clone https://github.com/joepothiboot/mlir-lldb-tools && cd mlir-lldb-tools",
-      "git checkout {commit}",
-      "python3 -m venv .venv && . .venv/bin/activate && pip install -e '.[dev]'",
-      "PYTHONPATH=.:src pytest -m 'not needs_lldb and not needs_mlir'",
-    ],
-    runNote:
-      "PYTHONPATH is needed because the editable install does not expose the top-level schemac package at this commit. LLDB's Python module must match your interpreter's minor version.",
-    tests: ["lldb-tests"],
-    benchmarks: [],
-    quickDemo:
-      "See the source language, what the front end actually does with it today, the generated C++ the debugger maps back to, and what is still missing.",
-    tour: [
-      {
-        title: "The source language",
-        text: "A schema with a string, an integer range, a tensor and a DSP buffer. These are the fields the debugger is meant to break on by name.",
-        artifacts: ["lldb-schema-source"],
-      },
-      {
-        title: "What the front end does at this commit",
-        text: "Running schemac on that example stops with a parse error. The message has no line or column, which is the kind of location loss this project exists to prevent.",
-        artifacts: ["lldb-frontend-diagnostic"],
-      },
-      {
-        title: "Generated code the debugger maps back to",
-        text: "Each __mlir_vN local corresponds to SSA value %N, and the metadata maps op → generated line. This file is checked into the repo. It could not be regenerated here because of the parse error above.",
-        artifacts: ["lldb-generated-cpp"],
-      },
-      {
-        title: "Tests and debug values",
-        text: "The toolchain-free tier is the only one that runs without LLDB and MLIR. No debugger session has been captured, so no debug values are shown.",
-        artifacts: ["lldb-tests", "lldb-debug-session"],
       },
     ],
   },
