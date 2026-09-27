@@ -67,6 +67,13 @@ jobs:
         if: steps.pin.outputs.changed == 'true'
         with:
           targets: wasm32-unknown-unknown
+      # pixi installs the Mojo version each project pins (Mojo and C++ tests,
+      # kernel benchmark). Without it those artifacts are captured as unavailable.
+      - name: Install pixi
+        if: steps.pin.outputs.changed == 'true'
+        run: |
+          curl -fsSL https://pixi.sh/install.sh | bash
+          echo "$HOME/.pixi/bin" >> "$GITHUB_PATH"
 
       # All projects are re-captured: VizMLIR diffs IR from the others.
       - name: Capture artifacts at the new pins
