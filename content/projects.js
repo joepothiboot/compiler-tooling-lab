@@ -41,6 +41,7 @@ export const PROJECTS = {
       "JSON Schema constraints as an MLIR dialect, optimized as IR and lowered to native code.",
     purpose: [
       "json-schema-mlir represents JSON Schema validation rules as operations in a `schema` dialect. Constraints are optimized as IR (subsumption, fusion, removing redundant checks) before being lowered to arith/scf/math and the LLVM dialect.",
+      "The same constraint lattice also exists as a Mojo library (`mojo/schema/`), with the canonicalizer's subsumption and meet rules and the lowered validation semantics. Its tests check that merging two constraints never changes which values are accepted.",
       "At the pinned commit, the entry point is `schema-opt` on `.mlir` input. The JSON-to-IR front end shown in the upstream pipeline diagram is not in the tree yet.",
     ],
     architecture: [
@@ -64,16 +65,22 @@ export const PROJECTS = {
         path: "tools/schema-opt/schema-opt.cpp",
         text: "Registers the pipelines that continue to the LLVM dialect.",
       },
+      {
+        name: "Mojo lattice library",
+        path: "mojo/schema/lattice.mojo",
+        text: "StringConstraints and NumberConstraints with subsumes, meet and validate, following the same rules as the two passes above.",
+      },
     ],
     run: [
       "git clone https://github.com/joepothiboot/json-schema-mlir && cd json-schema-mlir",
       "git checkout {commit}",
       'MLIR_INSTALL="$(brew --prefix llvm)" ./build.sh   # configures, builds schema-opt, runs check-schema',
       "./build/bin/schema-opt test/Dialect/Schema/schema-canonicalize.mlir --schema-canonicalize --split-input-file",
+      "pixi run test-mojo   # Mojo lattice tests; pixi installs the pinned Mojo",
     ],
     runNote:
       "Needs LLVM/MLIR with FileCheck and lit (captured with the toolchain listed below). Clone into a path without spaces, because lit's %s substitution breaks on them.",
-    tests: ["schema-tests"],
+    tests: ["schema-tests", "schema-mojo-tests"],
     benchmarks: ["schema-pass-timing"],
     quickDemo:
       "Follow one real test function from the dialect, through canonicalization and lowering, to the LLVM dialect, plus one verifier diagnostic.",
@@ -110,6 +117,11 @@ export const PROJECTS = {
         title: "Down to the LLVM dialect",
         text: "--schema-to-llvm-pipeline continues through control flow and LLVM conversion.",
         artifacts: ["schema-llvm"],
+      },
+      {
+        title: "The same lattice in Mojo",
+        text: "The Mojo library repeats each canonicalization test case, then checks a grid of constraint pairs and values, including NaN and infinity: whenever two constraints merge, the merged one accepts exactly what both accepted.",
+        artifacts: ["schema-mojo-tests"],
       },
     ],
   },
@@ -183,7 +195,7 @@ export const PROJECTS = {
       "A small image/math DSL dialect lowered to linalg and LLVM, with differential execution tests.",
     purpose: [
       "nano-dsp-mlir defines a `dsp` dialect (add, relu, matmul, conv2d) with shape verifiers, and lowers it to linalg.generic. From there the tests lower through stock MLIR passes to LLVM and execute with mlir-runner to check numeric results.",
-      "At v0.1.0 (plus one README commit) the tree contains the dialect, the dsp → linalg conversion and the tests. The upstream README also describes pieces not in the tree yet: transform-dialect schedules, -nanodsp-optimize, the Python DSL, sweep scripts and docs/.",
+      "Each dsp op is also implemented as a SIMD Mojo kernel (`mojo/nanodsp/`) and as a plain C++ loop nest (`reference/`). All three implementations are tested against the same expected values, and the Mojo kernels are benchmarked. The upstream README also describes pieces not in the tree yet: transform-dialect schedules, -nanodsp-optimize, the Python DSL and sweep scripts.",
     ],
     architecture: [
       {
@@ -206,15 +218,26 @@ export const PROJECTS = {
         path: "tools/nanodsp-opt/nanodsp-opt.cpp",
         text: "mlir-opt-style driver with the dialect and passes registered.",
       },
+      {
+        name: "Mojo kernels",
+        path: "mojo/nanodsp/kernels.mojo",
+        text: "Generic SIMD add, relu, matmul and conv2d with the dialect's semantics; the width comes from the target at compile time.",
+      },
+      {
+        name: "C++ reference",
+        path: "reference/nanodsp_ref.h",
+        text: "Scalar loop nests used as an independent check on both of the above.",
+      },
     ],
     run: [
       "git clone https://github.com/joepothiboot/nano-dsp-mlir && cd nano-dsp-mlir",
       "git checkout {commit}",
       "./test.sh   # finds Homebrew LLVM/MLIR or $MLIR_DIR, builds, runs check-nanodsp",
+      "pixi run test-mojo && pixi run test-reference && pixi run bench",
     ],
     runNote:
-      "Needs LLVM/MLIR with mlir-runner, FileCheck and lit. Clone into a path without spaces.",
-    tests: ["nano-tests"],
+      "Needs LLVM/MLIR with mlir-runner, FileCheck and lit. Clone into a path without spaces. The Mojo and C++ steps need only pixi, which installs the pinned Mojo.",
+    tests: ["nano-tests", "nano-mojo-tests", "nano-reference-tests"],
     benchmarks: ["nano-pass-timing", "nano-benchmark"],
     quickDemo:
       "Follow relu(conv2d(image) + bias) from the dsp dialect through 19 passes to the LLVM dialect, execute it, and see where compile time goes.",
@@ -245,8 +268,13 @@ export const PROJECTS = {
         artifacts: ["nano-execution"],
       },
       {
+        title: "The same ops in Mojo and C++",
+        text: "The Mojo kernels and the C++ reference are checked against the same expected values as the MLIR tests above. The Mojo tests also compare against a naive loop nest on odd sizes, so the code after each SIMD chunk runs too.",
+        artifacts: ["nano-mojo-tests", "nano-reference-tests"],
+      },
+      {
         title: "Profiling",
-        text: "Compile-time wall clock per pass, from one run on the capture host. It shows relative cost, not a benchmark. Runtime kernel numbers do not exist yet.",
+        text: "Compile-time wall clock per pass, from one run on the capture host. It shows relative cost, not a benchmark. The kernel numbers are the untiled Mojo kernels on one core, the baseline the planned tiling stage has to beat.",
         artifacts: ["nano-pass-timing", "nano-benchmark"],
       },
     ],

@@ -17,7 +17,10 @@ import {
   parseDiagnostics,
   parseIRDumps,
   parseLit,
+  parseMojoTests,
+  parsePassFailLines,
   parseTiming,
+  parseVitest,
 } from "../src/parse.js";
 
 /** @typedef {import("../src/model.js").Artifact} Artifact */
@@ -238,6 +241,39 @@ function litRun(
   });
 }
 
+/**
+ * Runs a pixi task in `dir`. Returns null when pixi is not installed; pixi
+ * installs the Mojo version the project pins on first use.
+ */
+function pixiTask(/** @type {string} */ dir, /** @type {string} */ task) {
+  const r = run("pixi", ["run", "--color", "never", task], {
+    cwd: dir,
+    env: { NO_COLOR: "1" },
+  });
+  return r.code === -1 && /ENOENT/.test(r.stderr) ? null : r;
+}
+
+const NO_PIXI =
+  "pixi (which installs the project's pinned Mojo toolchain) is not installed on the capture host.";
+
+/** @returns {Artifact} */
+function mojoTestRun(
+  /** @type {string} */ dir,
+  /** @type {string} */ id,
+  /** @type {string} */ title,
+) {
+  const r = pixiTask(dir, "test-mojo");
+  if (!r) return unavailable(id, "test-run", title, NO_PIXI);
+  return /** @type {Artifact} */ ({
+    id,
+    kind: "test-run",
+    title,
+    runner: "mojo",
+    ...withLog(parseMojoTests(r.stdout + r.stderr, r.code)),
+    provenance: { mode: "captured", command: "pixi run test-mojo" },
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Per-project captures
 
@@ -251,11 +287,13 @@ function captureSchemaMlir() {
     return [
       unavailable("schema-tests", "test-run", "lit regression suite", reason),
       unavailable("schema-input", "ir-snapshot", "Input IR", reason),
+      mojoTestRun(dir, "schema-mojo-tests", "Mojo constraint-lattice tests"),
     ];
   }
   /** @type {Artifact[]} */
   const out = [
     litRun(dir, "schema-tests", "lit regression suite (check-schema)"),
+    mojoTestRun(dir, "schema-mojo-tests", "Mojo constraint-lattice tests"),
   ];
 
   // Input: one function from the repo's own canonicalization test.
@@ -375,6 +413,55 @@ const NANO_STOCK_LOWERING = [
   "-reconcile-unrealized-casts",
 ];
 
+/**
+ * The Mojo kernels, the C++ reference and the kernel benchmark. None of them
+ * need the MLIR build.
+ * @returns {Artifact[]}
+ */
+function captureNanoKernels(/** @type {string} */ dir) {
+  const mojo = mojoTestRun(dir, "nano-mojo-tests", "Mojo kernel tests");
+  const ref = pixiTask(dir, "test-reference");
+  const bench = pixiTask(dir, "bench");
+  if (!ref || !bench)
+    return [
+      mojo,
+      unavailable(
+        "nano-reference-tests",
+        "test-run",
+        "C++ reference tests",
+        NO_PIXI,
+      ),
+      unavailable(
+        "nano-benchmark",
+        "execution",
+        "Mojo kernel throughput",
+        NO_PIXI,
+      ),
+    ];
+  return [
+    mojo,
+    /** @type {Artifact} */ ({
+      id: "nano-reference-tests",
+      kind: "test-run",
+      title: "C++ reference tests",
+      runner: "c++",
+      ...withLog(parsePassFailLines(ref.stdout + ref.stderr)),
+      provenance: { mode: "captured", command: "pixi run test-reference" },
+    }),
+    /** @type {Artifact} */ ({
+      id: "nano-benchmark",
+      kind: "execution",
+      title: "Mojo kernel throughput (untiled, one core, best of 3-5 runs)",
+      exitCode: bench.code,
+      stdout: bench.stdout
+        .split("\n")
+        .filter((l) => /^(matmul|conv2d) /.test(l))
+        .join("\n"),
+      provenance: { mode: "captured", command: "pixi run bench" },
+    }),
+  ];
+}
+
 /** @returns {Artifact[]} */
 function captureNanoDsp() {
   const dir = srcDir("nano-dsp-mlir");
@@ -385,6 +472,7 @@ function captureNanoDsp() {
     return [
       unavailable("nano-tests", "test-run", "lit regression suite", reason),
       unavailable("nano-input", "ir-snapshot", "Input IR", reason),
+      ...captureNanoKernels(dir),
     ];
   }
   const litCfg = fs.readFileSync(path.join(dir, "test/lit.cfg.py"), "utf8");
@@ -491,14 +579,7 @@ function captureNanoDsp() {
     provenance: { mode: "captured", command: display("nanodsp-opt", timeArgs) },
   });
 
-  out.push(
-    unavailable(
-      "nano-benchmark",
-      "profile",
-      "Runtime kernel benchmark",
-      "benchmark/harness.cpp is a Google Benchmark starter with no build target at this commit, and upstream lists measured numbers as pending. No runtime numbers are shown until the project publishes them.",
-    ),
-  );
+  out.push(...captureNanoKernels(dir));
   return out;
 }
 
@@ -623,13 +704,19 @@ async function captureVizmlir() {
       provenance: { mode: "captured", command },
     });
   }
+  const t = run("npx", ["vitest", "run"], {
+    cwd: dir,
+    env: { CI: "1", NO_COLOR: "1" },
+  });
   out.push(
-    unavailable(
-      "viz-tests",
-      "test-run",
-      "Automated tests",
-      "The repository has no automated test suite at the pinned commit. The capture above exercises its WASM parser and diff module.",
-    ),
+    /** @type {Artifact} */ ({
+      id: "viz-tests",
+      kind: "test-run",
+      title: "Unit tests (vitest)",
+      runner: "vitest",
+      ...withLog(parseVitest(t.stdout + t.stderr)),
+      provenance: { mode: "captured", command: "npx vitest run" },
+    }),
   );
   return out;
 }
@@ -646,6 +733,17 @@ function toolchain() {
     llvm: v(tool("mlir-opt"), ["--version"], /LLVM version ([\w.]+)/),
     python: v("python3", ["--version"], /Python ([\w.]+)/),
     node: process.version,
+    mojo: v(
+      "pixi",
+      [
+        "run",
+        "--manifest-path",
+        path.join(srcDir("nano-dsp-mlir"), "pixi.toml"),
+        "mojo",
+        "--version",
+      ],
+      /Mojo ([\w.]+)/,
+    ),
     rustc: v("rustc", ["--version"], /rustc ([\w.]+)/),
   };
 }

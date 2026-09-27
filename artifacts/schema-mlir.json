@@ -1,13 +1,14 @@
 {
   "project": "schema-mlir",
-  "commit": "ed3ccd26398479fb8b0357f3fdaa73f41667d5c6",
+  "commit": "6f4be813566745002c9bebcb8b4b929bade347cd",
   "capture": {
-    "capturedAt": "2026-09-26T12:26:50.834Z",
+    "capturedAt": "2026-09-27T14:38:35.767Z",
     "host": "darwin-arm64",
     "toolchain": {
       "llvm": "23.1.1",
       "python": "3.11.7",
       "node": "v22.6.0",
+      "mojo": "1.1.0",
       "rustc": "1.91.1"
     }
   },
@@ -25,6 +26,21 @@
       "provenance": {
         "mode": "captured",
         "command": "lit -v build/test"
+      }
+    },
+    {
+      "id": "schema-mojo-tests",
+      "kind": "test-run",
+      "title": "Mojo constraint-lattice tests",
+      "runner": "mojo",
+      "passed": 12,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "log": "schema: 12 tests passed\n✨ Pixi task (test-mojo): mojo run -I mojo mojo/tests/test_lattice.mojo",
+      "provenance": {
+        "mode": "captured",
+        "command": "pixi run test-mojo"
       }
     },
     {
@@ -258,18 +274,18 @@
       "title": "Compile-time pass timing",
       "metric": "wall time",
       "unit": "s",
-      "total": 0.002,
+      "total": 0.0012,
       "entries": [
         {
           "name": "Parser",
-          "value": 0.0005,
-          "percent": 26.3,
+          "value": 0.0002,
+          "percent": 18.1,
           "depth": 0
         },
         {
           "name": "CanonicalizerPass",
-          "value": 0.0001,
-          "percent": 3.7,
+          "value": 0,
+          "percent": 3.4,
           "depth": 0
         },
         {
@@ -286,26 +302,26 @@
         },
         {
           "name": "LowerSchemaToStandardPass",
-          "value": 0.0003,
-          "percent": 13,
+          "value": 0.0002,
+          "percent": 15.4,
           "depth": 0
         },
         {
           "name": "ReconcileUnrealizedCastsPass",
           "value": 0.0001,
-          "percent": 3.2,
+          "percent": 4.8,
           "depth": 0
         },
         {
           "name": "CanonicalizerPass",
           "value": 0.0001,
-          "percent": 5.6,
+          "percent": 7,
           "depth": 0
         },
         {
           "name": "CSEPass",
           "value": 0,
-          "percent": 0.8,
+          "percent": 0.9,
           "depth": 0
         },
         {
@@ -317,19 +333,19 @@
         {
           "name": "SymbolDCEPass",
           "value": 0.0001,
-          "percent": 4.9,
+          "percent": 4.5,
           "depth": 0
         },
         {
           "name": "Output",
           "value": 0.0001,
-          "percent": 4.8,
+          "percent": 6.1,
           "depth": 0
         },
         {
           "name": "Rest",
-          "value": 0.0007,
-          "percent": 35,
+          "value": 0.0005,
+          "percent": 37.2,
           "depth": 0
         }
       ],

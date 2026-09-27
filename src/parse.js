@@ -1,4 +1,4 @@
-// Pure parsers for real tool output (mlir-opt-style drivers, lit).
+// Pure parsers for real tool output (mlir-opt-style drivers, lit, vitest, Mojo and C++ test programs).
 // Used by scripts/capture.mjs; unit-tested against verbatim output in test/.
 
 const DIAG_LINE = /^(.+?):(\d+):(\d+): (error|warning|note|remark): (.*)$/;
@@ -99,5 +99,60 @@ export function parseLit(out) {
     errors: 0,
     skipped: n("Unsupported"),
     log: [...results, "", ...summary].join("\n").trim(),
+  };
+}
+
+/**
+ * Parses the summary of `vitest run` (colours off).
+ * @param {string} out
+ */
+export function parseVitest(out) {
+  const summary = /^\s*Tests\s+(.*)$/m.exec(out)?.[1] ?? "";
+  /** @param {string} w */
+  const n = (w) => Number(new RegExp(`(\\d+) ${w}\\b`).exec(summary)?.[1] ?? 0);
+  return {
+    passed: n("passed"),
+    failed: n("failed"),
+    errors: 0,
+    skipped: n("skipped") + n("todo"),
+    log: out
+      .split("\n")
+      .filter((l) => /^\s*(✓|×|❯|Test Files|Tests)\s/.test(l))
+      .join("\n")
+      .trim(),
+  };
+}
+
+/**
+ * Parses a Mojo test program that ends with `<name>: N tests passed` and
+ * stops at the first failed assertion. A run without that line counts as one
+ * failure, since the remaining tests never ran.
+ * @param {string} out
+ * @param {number} exitCode
+ */
+export function parseMojoTests(out, exitCode) {
+  const passed = Number(/^\S+: (\d+) tests passed$/m.exec(out)?.[1] ?? 0);
+  const ok = exitCode === 0 && passed > 0;
+  return {
+    passed: ok ? passed : 0,
+    failed: ok ? 0 : 1,
+    errors: 0,
+    skipped: 0,
+    log: out.trim(),
+  };
+}
+
+/**
+ * Parses `PASS name` / `FAIL name` lines, as printed by the C++ reference test.
+ * @param {string} out
+ */
+export function parsePassFailLines(out) {
+  const lines = out.split("\n").filter((l) => /^(PASS|FAIL) /.test(l));
+  return {
+    passed: lines.filter((l) => l.startsWith("PASS")).length,
+    failed: lines.filter((l) => l.startsWith("FAIL")).length,
+    errors: 0,
+    skipped: 0,
+    log: lines.join("\n"),
   };
 }

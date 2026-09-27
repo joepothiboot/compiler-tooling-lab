@@ -5,7 +5,10 @@ import {
   parseDiagnostics,
   parseIRDumps,
   parseLit,
+  parseMojoTests,
+  parsePassFailLines,
   parseTiming,
+  parseVitest,
 } from "../src/parse.js";
 
 test("parseDiagnostics reads MLIR file:line:col diagnostics and notes", () => {
@@ -72,4 +75,39 @@ Total Discovered Tests: 3
   assert.equal(r.passed, 2);
   assert.equal(r.failed, 1);
   assert.match(r.log, /FAIL: .*schema-canonicalize/);
+});
+
+test("parseVitest reads the Tests summary line", () => {
+  const out = [
+    " Test Files  8 passed (8)",
+    "      Tests  136 passed (136)",
+    "   Start at  21:36:01",
+  ].join("\n");
+  const r = parseVitest(out);
+  assert.deepEqual([r.passed, r.failed, r.skipped], [136, 0, 0]);
+  const failed = parseVitest(
+    "      Tests  2 failed | 133 passed | 1 skipped (136)",
+  );
+  assert.deepEqual([failed.passed, failed.failed, failed.skipped], [133, 2, 1]);
+});
+
+test("parseMojoTests counts a full run and treats an abort as a failure", () => {
+  const ok = parseMojoTests(
+    "✨ Pixi task (test-mojo): mojo run -I mojo mojo/tests/test_kernels.mojo\nnanodsp: 12 tests passed\n",
+    0,
+  );
+  assert.deepEqual([ok.passed, ok.failed], [12, 0]);
+  const aborted = parseMojoTests(
+    "Unhandled exception caught during execution: At mojo/tests/test_kernels.mojo:41:21: AssertionError: `left == right` comparison failed:",
+    1,
+  );
+  assert.deepEqual([aborted.passed, aborted.failed], [0, 1]);
+});
+
+test("parsePassFailLines counts PASS and FAIL lines only", () => {
+  const r = parsePassFailLines(
+    "✨ Pixi task (test-reference): c++ ...\nPASS add\nPASS relu\nFAIL matmul\n",
+  );
+  assert.deepEqual([r.passed, r.failed], [2, 1]);
+  assert.equal(r.log, "PASS add\nPASS relu\nFAIL matmul");
 });

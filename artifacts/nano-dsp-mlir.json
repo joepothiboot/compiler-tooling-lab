@@ -1,13 +1,14 @@
 {
   "project": "nano-dsp-mlir",
-  "commit": "fedc7117c6e9ed0b6b98bdca4fa344297ac5b651",
+  "commit": "ccb09e1b01eb6ae5dd0fe9e6108eeb90d2a08ae5",
   "capture": {
-    "capturedAt": "2026-09-26T12:26:51.385Z",
+    "capturedAt": "2026-09-27T14:38:42.141Z",
     "host": "darwin-arm64",
     "toolchain": {
       "llvm": "23.1.1",
       "python": "3.11.7",
       "node": "v22.6.0",
+      "mojo": "1.1.0",
       "rustc": "1.91.1"
     }
   },
@@ -21,7 +22,7 @@
       "failed": 0,
       "errors": 0,
       "skipped": 0,
-      "log": "PASS: NANO-DSP-MLIR :: Integration/end-to-end.mlir (1 of 15)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/pipeline.mlir (2 of 15)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/relu.mlir (3 of 15)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/matmul.mlir (4 of 15)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/conv2d-strided.mlir (5 of 15)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/conv2d.mlir (6 of 15)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/conv2d-multichannel.mlir (7 of 15)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/add.mlir (8 of 15)\nPASS: NANO-DSP-MLIR :: Dialect/DSP/canonicalize.mlir (9 of 15)\nPASS: NANO-DSP-MLIR :: Conversion/DSPToLinalg/matmul.mlir (10 of 15)\nPASS: NANO-DSP-MLIR :: Conversion/DSPToLinalg/conv2d.mlir (11 of 15)\nPASS: NANO-DSP-MLIR :: Dialect/DSP/ops.mlir (12 of 15)\nPASS: NANO-DSP-MLIR :: Dialect/DSP/invalid.mlir (13 of 15)\nPASS: NANO-DSP-MLIR :: Conversion/DSPToLinalg/relu.mlir (14 of 15)\nPASS: NANO-DSP-MLIR :: Conversion/DSPToLinalg/add.mlir (15 of 15)\n\nTotal Discovered Tests: 15\n  Passed: 15 (100.00%)",
+      "log": "PASS: NANO-DSP-MLIR :: Dialect/DSP/invalid.mlir (1 of 15)\nPASS: NANO-DSP-MLIR :: Dialect/DSP/canonicalize.mlir (2 of 15)\nPASS: NANO-DSP-MLIR :: Dialect/DSP/ops.mlir (3 of 15)\nPASS: NANO-DSP-MLIR :: Conversion/DSPToLinalg/relu.mlir (4 of 15)\nPASS: NANO-DSP-MLIR :: Conversion/DSPToLinalg/matmul.mlir (5 of 15)\nPASS: NANO-DSP-MLIR :: Conversion/DSPToLinalg/add.mlir (6 of 15)\nPASS: NANO-DSP-MLIR :: Conversion/DSPToLinalg/conv2d.mlir (7 of 15)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/conv2d-multichannel.mlir (8 of 15)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/conv2d-strided.mlir (9 of 15)\nPASS: NANO-DSP-MLIR :: Integration/end-to-end.mlir (10 of 15)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/relu.mlir (11 of 15)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/matmul.mlir (12 of 15)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/conv2d.mlir (13 of 15)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/pipeline.mlir (14 of 15)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/add.mlir (15 of 15)\n\nTotal Discovered Tests: 15\n  Passed: 15 (100.00%)",
       "provenance": {
         "mode": "captured",
         "command": "lit -v build/test"
@@ -500,7 +501,7 @@
       "kind": "execution",
       "title": "Executed with mlir-runner",
       "exitCode": 0,
-      "stdout": "Unranked Memref base@ = 0x7cf4d85480 rank = 4 offset = 0 sizes = [1, 2, 2, 1] strides = [4, 2, 1, 1] data = \n[[[[0], \n   [3]], \n  [[30], \n   [39]]]]",
+      "stdout": "Unranked Memref base@ = 0x7c52d4d540 rank = 4 offset = 0 sizes = [1, 2, 2, 1] strides = [4, 2, 1, 1] data = \n[[[[0], \n   [3]], \n  [[30], \n   [39]]]]",
       "expected": [
         "rank = 4 offset = 0 sizes = [1, 2, 2, 1]",
         "0",
@@ -829,36 +830,36 @@
       "title": "Compile-time pass timing",
       "metric": "wall time",
       "unit": "s",
-      "total": 0.0072,
+      "total": 0.0071,
       "entries": [
         {
           "name": "Parser",
-          "value": 0.0011,
-          "percent": 15.9,
+          "value": 0.001,
+          "percent": 14.3,
           "depth": 0
         },
         {
           "name": "ConvertDSPToLinalg",
           "value": 0.0003,
-          "percent": 3.8,
+          "percent": 3.9,
           "depth": 0
         },
         {
           "name": "OneShotBufferizePass",
           "value": 0.0003,
-          "percent": 4,
+          "percent": 4.3,
           "depth": 0
         },
         {
           "name": "ExpandReallocPass",
           "value": 0.0001,
-          "percent": 1.1,
+          "percent": 1.2,
           "depth": 0
         },
         {
           "name": "CanonicalizerPass",
           "value": 0.0002,
-          "percent": 2.1,
+          "percent": 2.2,
           "depth": 0
         },
         {
@@ -906,7 +907,7 @@
         {
           "name": "ConvertLinalgToLoopsPass",
           "value": 0.0004,
-          "percent": 5.4,
+          "percent": 5.7,
           "depth": 0
         },
         {
@@ -930,7 +931,7 @@
         {
           "name": "ArithToLLVMConversionPass",
           "value": 0.0004,
-          "percent": 5.6,
+          "percent": 5.8,
           "depth": 0
         },
         {
@@ -948,7 +949,7 @@
         {
           "name": "ConvertFuncToLLVMPass",
           "value": 0.0003,
-          "percent": 4.1,
+          "percent": 4.4,
           "depth": 0
         },
         {
@@ -960,25 +961,25 @@
         {
           "name": "ConvertControlFlowToLLVMPass",
           "value": 0.0004,
-          "percent": 5,
+          "percent": 5.1,
           "depth": 0
         },
         {
           "name": "ReconcileUnrealizedCastsPass",
           "value": 0.0002,
-          "percent": 2.7,
+          "percent": 2.5,
           "depth": 0
         },
         {
           "name": "Output",
           "value": 0.0004,
-          "percent": 5.1,
+          "percent": 5.3,
           "depth": 0
         },
         {
           "name": "Rest",
           "value": 0.0015,
-          "percent": 20.6,
+          "percent": 20.7,
           "depth": 0
         }
       ],
@@ -988,12 +989,44 @@
       }
     },
     {
-      "id": "nano-benchmark",
-      "kind": "profile",
-      "title": "Runtime kernel benchmark",
+      "id": "nano-mojo-tests",
+      "kind": "test-run",
+      "title": "Mojo kernel tests",
+      "runner": "mojo",
+      "passed": 12,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "log": "nanodsp: 12 tests passed\n✨ Pixi task (test-mojo): mojo run -I mojo mojo/tests/test_kernels.mojo",
       "provenance": {
-        "mode": "unavailable",
-        "reason": "benchmark/harness.cpp is a Google Benchmark starter with no build target at this commit, and upstream lists measured numbers as pending. No runtime numbers are shown until the project publishes them."
+        "mode": "captured",
+        "command": "pixi run test-mojo"
+      }
+    },
+    {
+      "id": "nano-reference-tests",
+      "kind": "test-run",
+      "title": "C++ reference tests",
+      "runner": "c++",
+      "passed": 5,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "log": "PASS add\nPASS relu\nPASS relu propagates NaN\nPASS matmul\nPASS conv2d",
+      "provenance": {
+        "mode": "captured",
+        "command": "pixi run test-reference"
+      }
+    },
+    {
+      "id": "nano-benchmark",
+      "kind": "execution",
+      "title": "Mojo kernel throughput (untiled, one core, best of 3-5 runs)",
+      "exitCode": 0,
+      "stdout": "matmul   64 x 64 x 64    0.031 ms   16.91251612903226 GFLOP/s\nmatmul   128 x 128 x 128    0.199 ms   21.076904522613066 GFLOP/s\nmatmul   256 x 256 x 256    1.443 ms   23.25324462924463 GFLOP/s\nmatmul   512 x 512 x 512    13.844 ms   19.39002138110373 GFLOP/s\nconv2d   56 x 56 x 64 -> 64    13.663 ms   15.735259313474346 GFLOP/s\nconv2d   28 x 28 x 128 -> 128    9.178 ms   21.72156373937677 GFLOP/s",
+      "provenance": {
+        "mode": "captured",
+        "command": "pixi run bench"
       }
     }
   ]

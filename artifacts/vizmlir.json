@@ -1,13 +1,14 @@
 {
   "project": "vizmlir",
-  "commit": "46e767bdc1683170aea7c3220c485f6fc5bf5e20",
+  "commit": "b4f2c91a9b1734b03f8ea362c97e5597b0654080",
   "capture": {
-    "capturedAt": "2026-09-26T12:26:53.564Z",
+    "capturedAt": "2026-09-27T14:38:48.511Z",
     "host": "darwin-arm64",
     "toolchain": {
       "llvm": "23.1.1",
       "python": "3.11.7",
       "node": "v22.6.0",
+      "mojo": "1.1.0",
       "rustc": "1.91.1"
     }
   },
@@ -270,39 +271,22 @@
         "rows": [
           {
             "type": "changed",
-            "before": "module",
-            "after": "affine_map"
-          },
-          {
-            "type": "added",
-            "after": "affine_map"
-          },
-          {
-            "type": "added",
-            "after": "affine_map"
-          },
-          {
-            "type": "added",
-            "after": "affine_map"
-          },
-          {
-            "type": "added",
-            "after": "module"
-          },
-          {
-            "type": "added",
+            "before": "dsp.conv2d",
             "after": "tensor.empty"
           },
           {
-            "type": "added",
+            "type": "changed",
+            "before": "dsp.add",
             "after": "arith.constant"
           },
           {
-            "type": "added",
+            "type": "changed",
+            "before": "dsp.relu",
             "after": "linalg.fill"
           },
           {
-            "type": "added",
+            "type": "changed",
+            "before": "tensor.cast",
             "after": "linalg.generic"
           },
           {
@@ -322,11 +306,13 @@
             "after": "linalg.yield"
           },
           {
-            "type": "added",
+            "type": "changed",
+            "before": "call @printMemrefF32",
             "after": "->"
           },
           {
-            "type": "added",
+            "type": "changed",
+            "before": "return",
             "after": "tensor.empty"
           },
           {
@@ -378,16 +364,16 @@
             "after": "->"
           },
           {
-            "type": "removed",
-            "before": "dsp.conv2d"
+            "type": "added",
+            "after": "tensor.cast"
           },
           {
-            "type": "removed",
-            "before": "dsp.add"
+            "type": "added",
+            "after": "call @printMemrefF32"
           },
           {
-            "type": "removed",
-            "before": "dsp.relu"
+            "type": "added",
+            "after": "return"
           }
         ],
         "beforeGraph": {
@@ -396,8 +382,8 @@
           "diagnostics": []
         },
         "afterGraph": {
-          "nodes": 36,
-          "edges": 48,
+          "nodes": 32,
+          "edges": 44,
           "diagnostics": []
         }
       },
@@ -409,10 +395,16 @@
     {
       "id": "viz-tests",
       "kind": "test-run",
-      "title": "Automated tests",
+      "title": "Unit tests (vitest)",
+      "runner": "vitest",
+      "passed": 136,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "log": "✓ tests/unit/palette.test.js (5 tests) 4ms\n ✓ tests/unit/export.test.js (7 tests) 24ms\n ✓ tests/unit/abi-sync.test.js (9 tests) 23ms\n ✓ tests/unit/samples.test.js (8 tests) 83ms\n ✓ tests/unit/timing.test.js (19 tests) 57ms\n ✓ tests/unit/trace.test.js (44 tests) 29ms\n ✓ tests/unit/diff.test.js (18 tests) 748ms\n   ✓ diffSnapshots > stays fast on large modules  688ms\n ✓ tests/unit/mlir-highlight.test.js (26 tests) 43ms\n Test Files  8 passed (8)\n      Tests  136 passed (136)",
       "provenance": {
-        "mode": "unavailable",
-        "reason": "The repository has no automated test suite at the pinned commit. The capture above exercises its WASM parser and diff module."
+        "mode": "captured",
+        "command": "npx vitest run"
       }
     }
   ]

@@ -50,7 +50,8 @@ bash scripts/capture.sh vizmlir    # one project (VizMLIR always re-reads the ot
 ```
 
 This needs LLVM/MLIR (the version in `manifest.json` → `toolchain.llvm`, with
-FileCheck, `mlir-runner` and `lit`), Python 3.11, Node and Rust. It clones each
+FileCheck, `mlir-runner` and `lit`), Python 3.11, Node, Rust and
+[pixi](https://pixi.sh) (which installs the Mojo version each project pins). It clones each
 project at its pin into `$WORK_DIR`, which must not contain spaces because
 lit's `%s` substitution breaks on them. It then builds each project with the
 project's own scripts and runs `scripts/capture.mjs`. Set `REPO_BASE=<dir>` to
@@ -64,7 +65,7 @@ content/projects.js      page text; every behavioural claim references an artifa
 artifacts/<id>.json      captured/static/unavailable artifacts per project (generated)
 inputs/                  inputs written for this lab (clearly labelled on the site)
 src/model.js             shared data model: JSDoc types + validators
-src/parse.js             parsers for real tool output (diagnostics, IR dumps, timing, lit, pytest)
+src/parse.js             parsers for real tool output (diagnostics, IR dumps, timing, lit, vitest, Mojo/C++ tests)
 src/render.js            HTML rendering (pure functions)
 src/site.css, copy.js    the only shipped CSS/JS
 scripts/capture.sh|.mjs  clone at pin → build → run tools → artifacts/
