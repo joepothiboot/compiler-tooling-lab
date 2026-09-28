@@ -57,35 +57,141 @@ function commandOf(/** @type {Json} */ a) {
 const loc = (/** @type {Json} */ l) =>
   l ? `${lab(l.file)}:${l.line}${l.column ? `:${l.column}` : ""}` : "";
 
-/** @returns {{ text: string, cls?: string }[]} */
+/**
+ * A run of text with an optional colour class. Emoji parts use "emo", which
+ * hides them from screen readers since the words next to them say the same.
+ * @typedef {{ t: string, c?: string }} Part
+ * @typedef {{ parts: Part[], cls?: string }} Line
+ */
+
+const P = (/** @type {string} */ t, /** @type {string} */ c = "") =>
+  /** @type {Part} */ ({ t, c });
+const plain = (/** @type {string} */ t, /** @type {string} */ cls = "") =>
+  /** @type {Line} */ ({ parts: [P(t)], cls });
+
+/** Emoji per artifact kind, used on chips and in "ls". */
+const ICON = /** @type {Record<string, string>} */ ({
+  source: "📜",
+  "ir-snapshot": "🧬",
+  diagnostic: "🩺",
+  execution: "⚡",
+  "test-run": "🧪",
+  profile: "📊",
+  "pass-event": "🔀",
+});
+const iconOf = (/** @type {Json} */ a) =>
+  a.provenance.mode === "unavailable" ? "🚫" : (ICON[a.kind] ?? "📄");
+
+/**
+ * Split text into parts, colouring each match of `re` by which of its capture
+ * groups matched. Only ever sets textContent later, so nothing is parsed as HTML.
+ * @param {string} text
+ * @param {[RegExp, string[]]} rule
+ * @returns {Part[]}
+ */
+function paint(text, [re, classes]) {
+  /** @type {Part[]} */
+  const parts = [];
+  let at = 0;
+  for (const m of text.matchAll(re)) {
+    const i = m.index ?? 0;
+    if (i > at) parts.push(P(text.slice(at, i)));
+    parts.push(P(m[0], classes[m.slice(1).findIndex((g) => g !== undefined)]));
+    at = i + m[0].length;
+  }
+  if (at < text.length) parts.push(P(text.slice(at)));
+  return parts;
+}
+
+/** @type {[RegExp, string[]]} */
+const MLIR = [
+  /(\/\/.*)|("(?:[^"\\\n]|\\.)*")|([%^][\w.$#-]+)|(@[\w.$-]+)|\b((?:[a-z_]\w*\.)+[a-z_]\w*|return|module)\b|(![\w.]+|\b(?:i\d+|f\d+|bf16|index|memref|tensor|vector|none)\b)|(-?\b\d+(?:\.\d+)?(?:e[+-]?\d+)?\b|\btrue\b|\bfalse\b)/g,
+  ["c-com", "c-str", "c-ssa", "c-sym", "c-op", "c-type", "c-num"],
+];
+/** @type {[RegExp, string[]]} */
+const LOG = [
+  /(✓|\bPASS(?:ED)?\b|\bok\b|\b[Pp]assed\b)|(✗|×|\bFAIL(?:ED)?\b|\bUNRESOLVED\b|\bERROR\b)|(\bUNSUPPORTED\b|\bXFAIL\b|\b[Ss]kipped\b)|(\b\d+(?:\.\d+)?\s?m?s\b)/g,
+  ["c-pass", "c-fail", "c-skip", "c-num"],
+];
+/** @type {[RegExp, string[]]} */
+const NUM = [/(-?\b\d+(?:\.\d+)?\b)/g, ["c-num"]];
+
+const SEVERITY = /** @type {Record<string, [string, string]>} */ ({
+  error: ["❌", "c-fail"],
+  warning: ["⚠️", "c-skip"],
+  note: ["💡", "c-sym"],
+  remark: ["💬", "c-sym"],
+});
+
+const exit = (/** @type {number} */ code) =>
+  /** @type {Line} */ ({
+    parts: [
+      P(code === 0 ? "✔ " : "✘ ", code === 0 ? "c-pass" : "c-fail"),
+      P(`exit code ${code}`),
+    ],
+    cls: "dim",
+  });
+
+/** A 12-cell bar for a percentage, in eighths so small shares still show. */
+function meter(/** @type {number} */ pct) {
+  const eighths = Math.round((Math.max(0, Math.min(100, pct)) / 100) * 96);
+  const partial = ["", "▏", "▎", "▍", "▌", "▋", "▊", "▉"][eighths % 8];
+  return ("█".repeat(Math.floor(eighths / 8)) + partial).padEnd(12);
+}
+
+/** @returns {Line[]} */
 function outputOf(/** @type {Json} */ a) {
   if (a.provenance.mode === "unavailable")
-    return [{ text: `not available: ${a.provenance.reason}`, cls: "warn" }];
+    return [
+      {
+        parts: [P("🚫 ", "emo"), P(`not available: ${a.provenance.reason}`)],
+        cls: "warn",
+      },
+    ];
   switch (a.kind) {
     case "source":
     case "ir-snapshot":
-      return [{ text: a.text }];
+      return [{ parts: paint(a.text, MLIR) }];
     case "diagnostic":
       return [
-        ...a.entries.map((/** @type {Json} */ e) => ({
-          text: `${loc(e.location) || "(no location)"}: ${e.severity}: ${e.message}`,
-          cls: e.severity === "error" ? "err" : "dim",
-        })),
-        { text: `exit code ${a.exitCode}`, cls: "dim" },
+        ...a.entries.map((/** @type {Json} */ e) => {
+          const [emo, c] = SEVERITY[e.severity] ?? ["•", ""];
+          return /** @type {Line} */ ({
+            parts: [
+              P(`${emo} `, "emo"),
+              P(loc(e.location) || "(no location)", "c-loc"),
+              P(": "),
+              P(e.severity, c),
+              P(": "),
+              P(e.message),
+            ],
+            cls: e.severity === "error" ? "" : "dim",
+          });
+        }),
+        exit(a.exitCode),
       ];
     case "execution":
+      return [{ parts: paint(a.stdout, NUM) }, exit(a.exitCode)];
+    case "test-run": {
+      const bad = a.failed || a.errors;
       return [
-        { text: a.stdout },
-        { text: `exit code ${a.exitCode}`, cls: "dim" },
-      ];
-    case "test-run":
-      return [
-        { text: a.log },
+        { parts: paint(a.log, LOG) },
         {
-          text: `${a.passed} passed, ${a.failed} failed, ${a.errors} errors, ${a.skipped} skipped (${a.runner})`,
-          cls: a.failed || a.errors ? "err" : "ok",
+          parts: [
+            P(bad ? "❌ " : "✅ ", "emo"),
+            P(`${a.passed} passed`, "c-pass"),
+            P(", "),
+            P(`${a.failed} failed`, a.failed ? "c-fail" : "dim"),
+            P(", "),
+            P(`${a.errors} errors`, a.errors ? "c-fail" : "dim"),
+            P(", "),
+            P(`${a.skipped} skipped`, a.skipped ? "c-skip" : "dim"),
+            P(` (${a.runner})`, "dim"),
+          ],
+          cls: "summary",
         },
       ];
+    }
     case "profile": {
       const w = Math.min(
         44,
@@ -95,37 +201,62 @@ function outputOf(/** @type {Json} */ a) {
           ),
         ),
       );
-      const rows = a.entries.map((/** @type {Json} */ e) => {
+      /** @type {Part[]} */
+      const parts = [];
+      a.entries.forEach((/** @type {Json} */ e, /** @type {number} */ i) => {
         const name = `${"  ".repeat(e.depth)}${e.name}`.padEnd(w).slice(0, w);
-        return `${name}  ${e.value.toFixed(4).padStart(8)} ${a.unit}  ${e.percent.toFixed(1).padStart(5)}%`;
+        const heat =
+          e.percent >= 30 ? "c-fail" : e.percent >= 10 ? "c-skip" : "c-pass";
+        parts.push(
+          P(`${i ? "\n" : ""}${name}  `),
+          P(`${e.value.toFixed(4).padStart(8)} ${a.unit}`, "c-num"),
+          P("  "),
+          P(`${e.percent.toFixed(1).padStart(5)}%`, heat),
+          P(` ${meter(e.percent)}`, heat),
+        );
       });
       return [
-        { text: rows.join("\n") },
-        { text: `total ${a.total} ${a.unit} (${a.metric})`, cls: "dim" },
+        { parts },
+        plain(`⏱️ total ${a.total} ${a.unit} (${a.metric})`, "dim"),
       ];
     }
     case "pass-event": {
+      /** @type {Line[]} */
       const out = [
         {
-          text: `pass ${a.pass} (#${a.index}): ${a.changed ? "changed the IR" : "no change"}`,
+          parts: [
+            P("🔧 ", "emo"),
+            P("pass "),
+            P(a.pass, "c-op"),
+            P(` (#${a.index}): `, "dim"),
+            a.changed ? P("changed the IR", "c-skip") : P("no change", "dim"),
+          ],
         },
       ];
       if (a.diff) {
         const sign = { added: "+", removed: "-", changed: "~" };
+        const cls = { added: "c-pass", removed: "c-fail", changed: "c-skip" };
         out.push({
-          text: a.diff.rows
-            .map((/** @type {Json} */ r) =>
-              r.type === "changed"
-                ? `~ ${r.before} -> ${r.after}`
-                : `${sign[/** @type {"added" | "removed"} */ (r.type)]} ${r.type === "added" ? r.after : r.before}`,
-            )
-            .join("\n"),
+          parts: a.diff.rows.map(
+            (/** @type {Json} */ r, /** @type {number} */ i) => {
+              const type = /** @type {"added" | "removed" | "changed"} */ (
+                r.type
+              );
+              const body =
+                type === "changed"
+                  ? `${r.before} -> ${r.after}`
+                  : type === "added"
+                    ? r.after
+                    : r.before;
+              return P(`${i ? "\n" : ""}${sign[type]} ${body}`, cls[type]);
+            },
+          ),
         });
       }
       return out;
     }
   }
-  return [{ text: JSON.stringify(a, null, 2) }];
+  return [plain(JSON.stringify(a, null, 2))];
 }
 
 /** Artifacts offered as one-click chips: the ones people usually want. */
@@ -163,7 +294,8 @@ async function start() {
   const toggle = el("button", "term-toggle");
   toggle.setAttribute("type", "button");
   toggle.innerHTML =
-    '<span class="term-glyph" aria-hidden="true">&gt;_</span> Terminal';
+    '<span class="term-dots" aria-hidden="true"><i></i><i></i><i></i></span>' +
+    '<span class="term-glyph" aria-hidden="true">&gt;<span class="term-caret">_</span></span> Terminal';
   const select = /** @type {HTMLSelectElement} */ (el("select", "term-select"));
   select.id = "term-project";
   select.setAttribute("aria-label", "Project");
@@ -172,7 +304,7 @@ async function start() {
     o.value = p.id;
     select.append(o);
   }
-  const note = el("span", "term-note", "Replays captured output");
+  const note = el("span", "term-note", "📼 Replays captured output");
   bar.append(toggle, select, note);
 
   const body = el("div", "term-body");
@@ -233,10 +365,57 @@ async function start() {
     width = setWidth(width + d);
   });
 
-  const print = (/** @type {string} */ text, cls = "") => {
-    out.append(el("pre", cls ? `line ${cls}` : "line", text));
-    out.scrollTop = out.scrollHeight;
+  const calm = matchMedia("(prefers-reduced-motion: reduce)");
+  const wait = (/** @type {number} */ ms) =>
+    new Promise((r) => setTimeout(r, ms));
+  // Commands run one at a time so animated output never interleaves. Anything
+  // waiting behind the current one makes it finish its animation at once.
+  /** @type {Promise<unknown>} */
+  let queue = Promise.resolve();
+  let waiting = 0;
+  const hurry = () => waiting > 0 || calm.matches;
+  const enqueue = (/** @type {string} */ line) => {
+    waiting++;
+    queue = queue
+      .then(() => {
+        waiting--;
+        return exec(line);
+      })
+      .catch(() => {
+        out.removeAttribute("aria-busy");
+      });
   };
+
+  const fill = (
+    /** @type {HTMLElement} */ node,
+    /** @type {Part[]} */ parts,
+  ) => {
+    for (const { t, c } of parts) {
+      if (!c) {
+        node.append(t);
+        continue;
+      }
+      const s = el("span", c, t);
+      if (c === "emo") s.setAttribute("aria-hidden", "true");
+      node.append(s);
+    }
+    return node;
+  };
+  const scroll = () => (out.scrollTop = out.scrollHeight);
+  /** Print a line; `order` staggers its fade-in after a replayed command. */
+  const show = (/** @type {Line} */ line, order = -1) => {
+    const pre = el("pre", line.cls ? `line ${line.cls}` : "line");
+    fill(pre, line.parts);
+    if (order >= 0 && !hurry()) {
+      pre.classList.add("enter");
+      pre.style.setProperty("--i", String(Math.min(order, 8)));
+    }
+    out.append(pre);
+    scroll();
+    return pre;
+  };
+  const print = (/** @type {string} */ text, cls = "") =>
+    show(plain(text, cls));
   const short = (/** @type {string} */ sha) => sha.slice(0, 7);
 
   const setOpen = (/** @type {boolean} */ open, focus = true) => {
@@ -261,49 +440,101 @@ async function start() {
     list = file.artifacts;
     chips.replaceChildren(
       ...featured(list).map((a) => {
-        const b = el("button", "term-chip", a.title);
+        const b = fill(el("button", "term-chip"), [
+          P(`${iconOf(a)} `, "emo"),
+          P(a.title),
+        ]);
         b.setAttribute("type", "button");
         b.title = commandOf(a);
-        b.addEventListener("click", () => exec(`run ${list.indexOf(a) + 1}`));
+        b.addEventListener("click", () =>
+          enqueue(`run ${list.indexOf(a) + 1}`),
+        );
         return b;
       }),
     );
-    print(
-      `${p.name} @ ${short(p.commit)} · ${list.length} recorded outputs. Pick one above, or type "ls".`,
-      "dim",
-    );
+    show({
+      parts: [
+        P("📦 ", "emo"),
+        P(p.name, "c-sym"),
+        P(
+          ` @ ${short(p.commit)} · ${list.length} recorded outputs. Pick one above, or type "ls".`,
+        ),
+      ],
+      cls: "dim",
+    });
   }
 
-  function run(/** @type {Json} */ a) {
+  async function run(/** @type {Json} */ a) {
     const file = cache.get(current.id);
-    print(`$ ${commandOf(a)}`, "cmd");
+    out.setAttribute("aria-busy", "true");
+    // Type the command out, then a short spinner, then the recorded output.
+    const text = commandOf(a);
+    const cmd = show({ parts: [P("$ ", "c-prompt")] });
+    cmd.classList.add("cmd");
+    const typed = el("span", "c-cmdtext");
+    cmd.append(typed);
+    if (!hurry()) {
+      cmd.classList.add("typing");
+      const step = Math.max(1, Math.ceil(text.length / 28));
+      for (let i = step; i < text.length && !hurry(); i += step) {
+        typed.textContent = text.slice(0, i);
+        scroll();
+        await wait(14);
+      }
+      cmd.classList.remove("typing");
+    }
+    typed.textContent = text;
+    if (!hurry()) {
+      const spin = show(plain("", "dim spin"));
+      const frames = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏";
+      for (let i = 0; i < 9 && !hurry(); i++) {
+        spin.textContent = `${frames[i % frames.length]} replaying captured output…`;
+        await wait(45);
+      }
+      spin.remove();
+    }
+
     const pv = a.provenance;
+    /** @type {Line[]} */
+    const lines = [];
     if (pv.mode === "captured")
-      print(
-        `# replayed from capture · ${current.name}@${short(current.commit)} · ${file.capture.host} · LLVM ${file.capture.toolchain.llvm ?? "?"} · ${file.capture.capturedAt.slice(0, 10)}`,
-        "dim",
+      lines.push(
+        plain(
+          `📼 replayed from capture · ${current.name}@${short(current.commit)} · ${file.capture.host} · LLVM ${file.capture.toolchain.llvm ?? "?"} · ${file.capture.capturedAt.slice(0, 10)}`,
+          "dim",
+        ),
       );
     else if (pv.mode === "static")
-      print(
-        `# file read verbatim at ${current.name}@${short(current.commit)}`,
-        "dim",
+      lines.push(
+        plain(
+          `📄 file read verbatim at ${current.name}@${short(current.commit)}`,
+          "dim",
+        ),
       );
-    for (const o of outputOf(a)) print(o.text, o.cls);
+    lines.push(...outputOf(a));
+    lines.forEach((l, i) => show(l, i));
+    out.removeAttribute("aria-busy");
   }
 
   function help() {
-    print(
+    const rows = [
+      ["help", "this list"],
+      ["ls", "every recorded output for the current project"],
+      ["run <n>", "replay output n (or just type n)"],
       [
-        "help               this list",
-        "ls                 every recorded output for the current project",
-        "run <n>            replay output n (or just type n)",
-        "use <project>      switch project: " +
-          projects.map((p) => p.id).join(", "),
-        "projects           list projects",
-        "clear              clear the screen",
-        "Typing the start of a recorded command also replays it.",
-      ].join("\n"),
-    );
+        "use <project>",
+        `switch project: ${projects.map((p) => p.id).join(", ")}`,
+      ],
+      ["projects", "list projects"],
+      ["clear", "clear the screen"],
+    ];
+    show({
+      parts: [
+        ...rows.flatMap(([c, d]) => [P(c.padEnd(19), "c-op"), P(`${d}\n`)]),
+        P("💡 ", "emo"),
+        P("Typing the start of a recorded command also replays it.", "dim"),
+      ],
+    });
   }
 
   async function exec(/** @type {string} */ raw) {
@@ -316,58 +547,60 @@ async function start() {
     if (cmd === "help") return help();
     if (cmd === "clear") return out.replaceChildren();
     if (cmd === "projects") {
-      print(
-        projects
-          .map(
-            (p) =>
-              `${p.id === current.id ? "*" : " "} ${p.id.padEnd(16)} ${p.name} @ ${short(p.commit)}`,
-          )
-          .join("\n"),
-      );
+      show({
+        parts: projects.flatMap((p, i) => [
+          P(`${i ? "\n" : ""}${p.id === current.id ? "▶" : " "} `, "c-prompt"),
+          P(p.id.padEnd(16), p.id === current.id ? "c-sym" : ""),
+          P(` ${p.name} @ ${short(p.commit)}`, "dim"),
+        ]),
+      });
       return;
     }
     if (cmd === "use") {
       const p = projects.find((x) => x.id === arg || x.name === arg);
       if (!p)
-        return print(`use: unknown project "${arg}". Try "projects".`, "err");
+        return print(`✘ use: unknown project "${arg}". Try "projects".`, "err");
       return use(p);
     }
     if (cmd === "ls") {
-      print(
-        list
-          .map(
-            (a, i) =>
-              `${String(i + 1).padStart(3)}  ${a.kind.padEnd(12)} ${a.title}${a.provenance.mode === "unavailable" ? "  (not available)" : ""}`,
-          )
-          .join("\n"),
-      );
+      show({
+        parts: list.flatMap((a, i) => [
+          P(`${i ? "\n" : ""}${String(i + 1).padStart(3)}  `, "c-num"),
+          P(`${iconOf(a)} `, "emo"),
+          P(a.kind.padEnd(12), "c-op"),
+          P(` ${a.title}`),
+          ...(a.provenance.mode === "unavailable"
+            ? [P("  (not available)", "c-skip")]
+            : []),
+        ]),
+      });
       return;
     }
     const n = Number(cmd === "run" ? arg : line);
     if (Number.isInteger(n)) {
       const a = list[n - 1];
-      if (!a) return print(`run: no output ${n}. Try "ls".`, "err");
+      if (!a) return print(`✘ run: no output ${n}. Try "ls".`, "err");
       return run(a);
     }
     const hit = list.find((a) => commandOf(a).startsWith(line));
     if (hit) return run(hit);
     print(
-      `${cmd}: not a recorded command for ${current.name}. Try "ls" or "help".`,
+      `✘ ${cmd}: not a recorded command for ${current.name}. Try "ls" or "help".`,
       "err",
     );
   }
 
   toggle.addEventListener("click", () => setOpen(body.hidden));
   select.addEventListener("change", () => {
-    const p = projects.find((x) => x.id === select.value);
-    if (p) use(p);
+    if (projects.some((x) => x.id === select.value))
+      enqueue(`use ${select.value}`);
     if (body.hidden) setOpen(true);
   });
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     const v = input.value;
     input.value = "";
-    exec(v);
+    enqueue(v);
   });
   input.addEventListener("keydown", (e) => {
     if (e.key === "ArrowUp" && hist > 0) input.value = history[--hist];
