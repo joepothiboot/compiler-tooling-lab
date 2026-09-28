@@ -51,10 +51,10 @@ test("the article covers every project in pipeline order", () => {
     assert.ok(html.includes(`href="#${p.id}"`), `${p.id}: contents link`);
 });
 
-test("each project links its architecture, run steps and tests", () => {
+test("each project links its walkthrough, architecture, run steps and tests", () => {
   const html = read("index.html");
   for (const p of manifest.projects) {
-    for (const note of ["architecture", "run", "tests"]) {
+    for (const note of ["walkthrough", "architecture", "run", "tests"]) {
       const id = `note-${p.id}-${note}`;
       assert.ok(html.includes(`href="#${id}"`), `${p.id}: no link to ${note}`);
       assert.match(html, new RegExp(`<section class="note" id="${id}"`), id);

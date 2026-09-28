@@ -50,6 +50,7 @@ export function loadContext(root = ROOT) {
     const refs = [
       ...c.tests,
       ...c.benchmarks,
+      c.thumb,
       ...c.tour.flatMap((/** @type {any} */ s) => s.artifacts ?? []),
     ];
     for (const id of refs)

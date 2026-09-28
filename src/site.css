@@ -1,6 +1,6 @@
-/* Long-form article theme: one serif reading column, sans headings, booktabs
-   tables, and provenance as evaluation badges. Supporting material opens in a
-   dialog (notes.js). System fonts only, so the site has no runtime dependencies. */
+/* Academic-homepage theme: one serif reading column, a publication-style
+   project list with thumbnails, booktabs tables, and provenance as evaluation
+   badges. Walkthroughs and supporting material open in a dialog (notes.js). System fonts only, so the site has no runtime dependencies. */
 :root {
   --bg: #fefefd;
   --fg: #1a1a19;
@@ -84,7 +84,8 @@ button:focus-visible {
 h1,
 h2,
 h3,
-h4 {
+h4,
+h5 {
   font-family: var(--sans);
   font-weight: 600;
   line-height: 1.25;
@@ -225,52 +226,87 @@ ol.stages {
 ol.stages li {
   margin: 0.3rem 0;
 }
-.toc {
-  margin: 2rem 0 0;
-  padding: 1rem 1.25rem;
-  background: var(--panel);
-  border-left: 3px solid var(--rule);
-}
-.toc-h {
-  margin: 0 0 0.25rem;
-  font-size: 0.8rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.toc ol {
-  margin: 0;
-  padding-left: 1.25rem;
-}
-.toc li {
-  margin: 0.35rem 0;
-}
-.toc .meta {
-  display: block;
-}
-section.project,
-section.project > h3 {
-  scroll-margin-top: 1rem;
-}
-section.project > h2 {
-  padding-top: 2rem;
+.projects > h2 {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
   border-top: 1.5px solid var(--rule);
 }
-section.project > h2 .num {
-  color: var(--muted);
-  font-weight: 400;
+
+/* Project list, laid out like a publication list: thumbnail, title,
+   venue line, links, one-line summary */
+section.project {
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+  margin: 2rem 0;
+  scroll-margin-top: 1rem;
 }
-.facts {
-  font: 0.85rem/1.7 var(--sans);
-  color: var(--muted);
-  margin: 0.75rem 0 1.5rem;
+section.project h3 {
+  margin: 0 0 0.2rem;
+  font-size: 1.1rem;
 }
-p.see {
-  margin: -0.4rem 0 0;
+.entry p {
+  margin: 0.2rem 0;
+}
+.venue {
+  font-size: 0.95rem;
+}
+.links {
   font: 0.9rem/1.5 var(--sans);
+  color: var(--muted);
 }
-p.see a::after {
-  content: " →";
+.thumb {
+  display: block;
+  position: relative;
+  height: 8rem;
+  overflow: hidden;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--fg);
+  text-decoration: none;
+}
+.thumb::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 2rem;
+  background: linear-gradient(transparent, var(--panel));
+}
+.thumb-code {
+  display: block;
+  padding: 0.5rem 0.6rem;
+  font: 0.58rem/1.45 var(--mono);
+  white-space: pre;
+}
+.thumb-code .d-added {
+  color: var(--ok);
+}
+.thumb-code .d-removed {
+  color: var(--bad);
+}
+.thumb-code .d-changed {
+  color: var(--muted);
+}
+.thumb-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 100%;
+  padding: 0.75rem 0.6rem 0.6rem;
+}
+.thumb-bars span {
+  flex: 1;
+  height: var(--h);
+  min-height: 1px;
+  background: var(--plot);
+}
+.thumb:has(.thumb-bars)::after {
+  display: none;
+}
+.note h4 {
+  margin: 2rem 0 0.25rem;
 }
 .callout {
   border: 1px solid var(--line);
@@ -772,6 +808,13 @@ body.has-term {
 }
 
 @media (max-width: 600px) {
+  section.project {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+  .thumb {
+    height: 6rem;
+  }
   .term-note {
     display: none;
   }

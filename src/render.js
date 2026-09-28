@@ -304,11 +304,48 @@ function renderNote(n) {
 }
 
 /**
- * One project as a section of the article, plus the notes it links to.
- * @param {Ctx} ctx @param {Project} p @param {number} n
+ * A small picture of one real artifact for the project list: the first lines
+ * of IR, the first diff rows, or the per-pass time bars. Decorative; the same
+ * artifact is shown in full in the walkthrough.
+ * @param {Ctx} ctx @param {string} id
+ */
+function renderThumb(ctx, id) {
+  const { artifact: a } = lookup(ctx, id);
+  if (a.kind === "profile") {
+    const top = a.entries.filter((e) => e.depth === 0);
+    const max = Math.max(...top.map((e) => e.percent)) || 1;
+    const bars = top
+      .map(
+        (e) =>
+          `<span style="--h:${((e.percent / max) * 100).toFixed(1)}%"></span>`,
+      )
+      .join("");
+    return `<span class="thumb-bars">${bars}</span>`;
+  }
+  if (a.kind === "pass-event" && a.diff) {
+    const rows = a.diff.rows.slice(0, 9).map((r) => {
+      const text =
+        r.type === "changed"
+          ? `~ ${r.before} → ${r.after}`
+          : r.type === "added"
+            ? `+ ${r.after}`
+            : `− ${r.before}`;
+      return `<span class="d-${r.type}">${esc(text)}</span>`;
+    });
+    return `<span class="thumb-code">${rows.join("\n")}</span>`;
+  }
+  const text = "text" in a ? a.text : "stdout" in a ? a.stdout : a.title;
+  const lines = text.split("\n").slice(0, 10).join("\n");
+  return `<span class="thumb-code">${esc(lines)}</span>`;
+}
+
+/**
+ * One project as an entry in the list, plus the notes it links to. The
+ * walkthrough note carries the long-form text and captured outputs.
+ * @param {Ctx} ctx @param {Project} p
  * @returns {{ html: string, notes: Note[] }}
  */
-function projectSection(ctx, p, n) {
+function projectEntry(ctx, p) {
   const c = ctx.content[p.id];
   /** @type {Note[]} */
   const notes = [];
@@ -321,6 +358,27 @@ function projectSection(ctx, p, n) {
     notes.push(x);
     return x;
   };
+
+  const status = c.status
+    ? `<div class="callout" role="note"><p><strong>Status:</strong> ${esc(c.status)}</p>${(c.statusLinks ?? []).map((l) => `<p><a href="${esc(l.href)}">${esc(l.text)}</a></p>`).join("")}</div>`
+    : "";
+  const live = p.liveUrl
+    ? `<p class="callout">${esc(p.name)} has a live app: <a href="${esc(p.liveUrl)}">${esc(p.liveUrl.replace(/^https:\/\//, ""))}</a>. It deploys from the project's main branch, so it can be newer than the pinned <code>${short(p.commit)}</code> described here.</p>`
+    : "";
+  const steps = c.tour
+    .map((s, i) => {
+      const arts = s.artifacts ?? [];
+      const body =
+        (s.timeline ? renderTimeline(ctx, s.timeline) : "") +
+        arts.map((id) => renderArtifact(ctx, id, 5)).join("");
+      return `<h4 id="${esc(p.id)}-${i + 1}">${i + 1}. ${esc(s.title)}</h4><p>${prose(s.text)}</p>${body}`;
+    })
+    .join("");
+  const walk = note(
+    "walkthrough",
+    "Walkthrough",
+    `${status}${c.purpose.map((t) => `<p>${prose(t)}</p>`).join("")}${live}<p><em>${esc(c.quickDemo)}</em></p>${steps}`,
+  );
 
   const caps = `<ul class="caps">${p.capabilities.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>`;
   const arch = c.architecture
@@ -349,49 +407,25 @@ function projectSection(ctx, p, n) {
     `${c.tests.map((id) => renderArtifact(ctx, id, 4)).join("")}${benches}`,
   );
 
-  const steps = c.tour
-    .map((s, i) => {
-      const arts = s.artifacts ?? [];
-      let see = "";
-      if (s.timeline || arts.length) {
-        const body =
-          (s.timeline ? renderTimeline(ctx, s.timeline) : "") +
-          arts.map((id) => renderArtifact(ctx, id, 4)).join("");
-        const x = note(`step-${i + 1}`, s.title, body);
-        const what = [
-          ...(s.timeline ? ["pass table"] : []),
-          ...arts.map((id) => lookup(ctx, id).artifact.title),
-        ];
-        see = `<p class="see">${noteLink(x, "Open the captured output")} <span class="meta">${esc(what.join(" · "))}</span></p>`;
-      }
-      return `<h3 id="${esc(p.id)}-${i + 1}">${esc(s.title)}</h3><p>${prose(s.text)}</p>${see}`;
-    })
-    .join("");
-
-  const status = c.status
-    ? `<div class="callout" role="note"><p><strong>Status:</strong> ${esc(c.status)}</p>${(c.statusLinks ?? []).map((l) => `<p><a href="${esc(l.href)}">${esc(l.text)}</a></p>`).join("")}</div>`
-    : "";
-  const live = p.liveUrl
-    ? `<p class="callout">${esc(p.name)} has a live app: <a href="${esc(p.liveUrl)}">${esc(p.liveUrl.replace(/^https:\/\//, ""))}</a>. It deploys from the project's main branch, so it can be newer than the pinned <code>${short(p.commit)}</code> described here.</p>`
-    : "";
-  const facts = [
-    `<code>${esc(p.version)}</code>`,
-    `<a href="${esc(gh(p, "tree"))}">Source at <code>${short(p.commit)}</code></a>`,
-    `<a href="${esc(gh(p, "blob", p.docsPath))}">${esc(p.docsPath)}</a>`,
-    noteLink(archNote),
-    noteLink(runNote),
-    noteLink(testsNote),
+  const links = [
+    `<a href="${esc(gh(p, "tree"))}">code</a>`,
+    `<a href="${esc(gh(p, "blob", p.docsPath))}">docs</a>`,
+    ...(p.liveUrl ? [`<a href="${esc(p.liveUrl)}">live app</a>`] : []),
+    noteLink(walk, "walkthrough"),
+    noteLink(archNote, "architecture"),
+    noteLink(runNote, "run"),
+    noteLink(testsNote, "tests"),
   ];
+  const thumbTitle = lookup(ctx, c.thumb).artifact.title;
 
   const html = `<section class="project" id="${esc(p.id)}" aria-labelledby="h-${esc(p.id)}">
-<h2 id="h-${esc(p.id)}"><span class="num">${n}.</span> ${esc(p.name)}</h2>
-<p class="dek">${esc(c.summary)}</p>
-<p class="facts">${p.stages.map((s) => esc(STAGE_LABEL[s])).join(" · ")}<br>${facts.join(" · ")}</p>
-${status}
-${c.purpose.map((t) => `<p>${prose(t)}</p>`).join("")}
-${live}
-<p>${esc(c.quickDemo)}</p>
-${steps}
+<a class="thumb" href="#${esc(walk.id)}" tabindex="-1" aria-hidden="true" title="${esc(thumbTitle)}">${renderThumb(ctx, c.thumb)}</a>
+<div class="entry">
+<h3 id="h-${esc(p.id)}">${esc(p.name)}</h3>
+<p class="venue"><em>${p.stages.map((s) => esc(STAGE_LABEL[s])).join(" · ")}</em> <span class="meta">(<code>${esc(p.version)}</code>, pinned at <code>${short(p.commit)}</code>)</span></p>
+<p class="links">${links.join(" / ")}</p>
+<p>${prose(c.summary)}</p>
+</div>
 </section>`;
   return { html, notes };
 }
@@ -399,7 +433,7 @@ ${steps}
 /** @param {Ctx} ctx */
 export function articlePage(ctx) {
   const { projects } = ctx.manifest;
-  const sections = projects.map((p, i) => projectSection(ctx, p, i + 1));
+  const entries = projects.map((p) => projectEntry(ctx, p));
   const captured = [...ctx.artifacts.values()]
     .map((h) => h.file.capture.capturedAt)
     .sort()
@@ -408,13 +442,7 @@ export function articlePage(ctx) {
     const by = projects.filter((p) => p.stages.includes(s));
     return `<li><strong>${esc(STAGE_LABEL[s])}.</strong> ${esc(ctx.stageText[s])} <span class="meta">${by.map((p) => `<a href="#${esc(p.id)}">${esc(p.name)}</a>`).join(", ")}</span></li>`;
   }).join("");
-  const toc = projects
-    .map(
-      (p) =>
-        `<li><a href="#${esc(p.id)}">${esc(p.name)}</a> <span class="meta">${esc(ctx.content[p.id].summary)}</span></li>`,
-    )
-    .join("");
-  const notes = sections
+  const notes = entries
     .flatMap((s) => s.notes)
     .map(renderNote)
     .join("");
@@ -425,14 +453,16 @@ export function articlePage(ctx) {
 <p class="dek">Three pinned MLIR projects, read as one pipeline: source, diagnostics, MLIR, pass inspection, profiling.</p>
 <p class="byline">${captured ? `Outputs captured <time datetime="${esc(captured.slice(0, 10))}">${esc(captured.slice(0, 10))}</time> · ` : ""}LLVM ${esc(ctx.manifest.toolchain.llvm)}</p>
 </header>
-<p>This page follows three separate compiler projects through the stages of a developer-tooling pipeline. Each project is pinned to one commit. Every output quoted below was captured from the project's own tools at that commit, or is a file shown verbatim from its repository. Where something could not be captured, the page says so instead of filling the gap.</p>
+<p>Each project below is pinned to one commit. Every output shown was captured from the project's own tools at that commit, or is a file shown verbatim from its repository. Where something could not be captured, the page says so instead of filling the gap.</p>
 <ol class="stages">${stages}</ol>
-<nav class="toc" aria-label="Contents"><h2 class="toc-h">Contents</h2><ol>${toc}</ol></nav>
-${sections.map((s) => s.html).join("\n")}
+<section class="projects" aria-labelledby="h-projects">
+<h2 id="h-projects">Projects</h2>
+${entries.map((s) => s.html).join("\n")}
+</section>
 </article>
 <section class="appendix" id="notes" aria-labelledby="h-notes">
-<h2 id="h-notes">Appendix: captured outputs and notes</h2>
-<p class="meta">The material linked from the article above, in order.</p>
+<h2 id="h-notes">Appendix: walkthroughs and captured outputs</h2>
+<p class="meta">The material linked from the project list above, in order.</p>
 ${notes}
 </section>`;
   return page({

@@ -22,6 +22,7 @@
  * @property {string[]} tests       Artifact ids of test-run (or unavailable) artifacts.
  * @property {string[]} benchmarks  Artifact ids of profile (or unavailable) artifacts.
  * @property {string} quickDemo
+ * @property {string} thumb         Artifact id drawn as the list thumbnail.
  * @property {TourStep[]} tour
  */
 
@@ -84,6 +85,7 @@ export const PROJECTS = {
     benchmarks: ["schema-pass-timing"],
     quickDemo:
       "Follow one real test function from the dialect, through canonicalization and lowering, to the LLVM dialect, plus one verifier diagnostic.",
+    thumb: "schema-input",
     tour: [
       {
         title: "Start from a real test input",
@@ -167,6 +169,7 @@ export const PROJECTS = {
     benchmarks: [],
     quickDemo:
       "Diff real compiler passes from the other projects with VizMLIR's own WASM parser, then open the app and try it yourself.",
+    thumb: "viz-nano-linalg-diff",
     tour: [
       {
         title: "Diff json-schema-mlir's canonicalization",
@@ -241,6 +244,7 @@ export const PROJECTS = {
     benchmarks: ["nano-pass-timing", "nano-benchmark"],
     quickDemo:
       "Follow relu(conv2d(image) + bias) from the dsp dialect through 19 passes to the LLVM dialect, execute it, and see where compile time goes.",
+    thumb: "nano-pass-timing",
     tour: [
       {
         title: "The program",
