@@ -1,11 +1,11 @@
-# compiler-tooling-lab
+# compiler-tooling-lab 🧪
 
 One integration portal for three separate MLIR projects, presented as a single
 developer-tooling pipeline:
 
 **source → diagnostics → MLIR → pass inspection → profiling**
 
-**Live site:** https://joepothiboot.github.io/compiler-tooling-lab/
+🌐 **Live site:** https://joepothiboot.github.io/compiler-tooling-lab/
 
 | Order | Project                                                              | Role in the pipeline                 |
 | ----- | -------------------------------------------------------------------- | ------------------------------------ |
@@ -20,7 +20,7 @@ CSS and a few lines of vanilla JS. No framework,
 bundler, WASM or runtime dependency. VizMLIR's interactive app is linked at
 [its own site](https://joepothiboot.github.io/vizmlir/).
 
-## Rules
+## 📏 Rules
 
 - **Pinned, never floating.** `manifest.json` pins every project to a full
   commit SHA. Branch names are refused by the tooling. All source and docs links
@@ -31,7 +31,7 @@ bundler, WASM or runtime dependency. VizMLIR's interactive app is linked at
   - `unavailable`: deliberately absent, with the reason
 - **Stale data fails the build.** An artifact file captured at a different commit than the manifest pins is rejected.
 
-## Setup
+## 🏁 Setup
 
 ```bash
 npm ci
@@ -45,7 +45,7 @@ is needed for the day-to-day loop.
 VizMLIR is the only project with an interactive app; the portal links to its
 own site at https://joepothiboot.github.io/vizmlir/ rather than bundling a copy.
 
-### Re-capturing artifacts
+### 🔄 Re-capturing artifacts
 
 ```bash
 bash scripts/capture.sh            # all projects
@@ -60,7 +60,7 @@ lit's `%s` substitution breaks on them. It then builds each project with the
 project's own scripts and runs `scripts/capture.mjs`. Set `REPO_BASE=<dir>` to
 clone from local checkouts instead of GitHub.
 
-## Architecture
+## 🏗️ Architecture
 
 ```
 manifest.json            pins: repo, version, commit, stages, capabilities
@@ -77,7 +77,7 @@ scripts/update-manifest.mjs, reconcile.mjs, lib-git.mjs   synchronization
 test/                    unit tests + an integration test over the built site
 ```
 
-### Shared data model
+### 🧬 Shared data model
 
 All three projects contribute the same artifact kinds, defined in
 [`src/model.js`](src/model.js):
@@ -95,7 +95,7 @@ All three projects contribute the same artifact kinds, defined in
 Artifact ids are global, so a VizMLIR pass event can reference snapshots
 captured from json-schema-mlir.
 
-## Synchronization
+## 🔁 Synchronization
 
 | Workflow                                           | Trigger                                  | Does                                                                      |
 | -------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------- |
@@ -121,7 +121,7 @@ trigger CI. PRs opened with the default `GITHUB_TOKEN` do not.
 Manually: `node scripts/update-manifest.mjs --project <id> --ref <tag|sha>`,
 then `bash scripts/capture.sh`.
 
-## Contributing
+## 🤝 Contributing
 
 - Keep claims tied to artifacts. If a page says a tool does something, reference
   an artifact id that shows it. The build fails on missing ids.
