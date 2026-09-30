@@ -277,6 +277,45 @@ function mojoTestRun(
 // ---------------------------------------------------------------------------
 // Per-project captures
 
+const TRACE_TITLE = "Front-end trace of the Person schema";
+
+/**
+ * The front end's trace of the Person example, stored verbatim. Run from the
+ * project root with a relative path so `source.file` does not depend on the host.
+ * @param {string} dir
+ * @returns {Artifact}
+ */
+function captureSchemaTrace(dir) {
+  const rel = "examples/person/person.schema.json";
+  const translate = path.join(dir, "build/bin/schema-translate");
+  if (!fs.existsSync(translate))
+    return unavailable(
+      "schema-trace",
+      "trace",
+      TRACE_TITLE,
+      "schema-translate (and --emit-trace) is not in the build at the pinned commit.",
+    );
+  const traceFile = path.join(TMP, "person.trace.json");
+  fs.rmSync(traceFile, { force: true });
+  const argv = ["--import-json-schema", rel, `--emit-trace=${traceFile}`];
+  const r = run(translate, argv, { cwd: dir });
+  if (r.code !== 0 || !fs.existsSync(traceFile))
+    throw new Error(`schema-translate --emit-trace failed:\n${r.stderr}`);
+  const trace = JSON.parse(fs.readFileSync(traceFile, "utf8"));
+  if (trace.source?.text !== fs.readFileSync(path.join(dir, rel), "utf8"))
+    throw new Error(`the trace's source text differs from ${rel}`);
+  return {
+    id: "schema-trace",
+    kind: "trace",
+    title: TRACE_TITLE,
+    trace,
+    provenance: {
+      mode: "captured",
+      command: display("schema-translate", argv),
+    },
+  };
+}
+
 /** @returns {Artifact[]} */
 function captureSchemaMlir() {
   const dir = srcDir("schema-mlir");
@@ -287,6 +326,7 @@ function captureSchemaMlir() {
     return [
       unavailable("schema-tests", "test-run", "lit regression suite", reason),
       unavailable("schema-input", "ir-snapshot", "Input IR", reason),
+      unavailable("schema-trace", "trace", TRACE_TITLE, reason),
       mojoTestRun(dir, "schema-mojo-tests", "Mojo constraint-lattice tests"),
     ];
   }
@@ -377,6 +417,8 @@ function captureSchemaMlir() {
     entries: parseDiagnostics(relativize(diag.stderr)),
     provenance: { mode: "captured", command: display("schema-opt", [bad]) },
   });
+
+  out.push(captureSchemaTrace(dir));
 
   const timeArgs = [
     input,
@@ -723,6 +765,25 @@ async function captureVizmlir() {
 
 // ---------------------------------------------------------------------------
 
+/** Asks pixi for Mojo in the first checked-out project that has a pixi.toml. */
+function mojoVersion() {
+  const ids = [args.project, ...manifest.projects.map((p) => p.id)];
+  for (const id of ids) {
+    const toml = id && path.join(srcDir(id), "pixi.toml");
+    if (!toml || !fs.existsSync(toml)) continue;
+    const r = run("pixi", [
+      "run",
+      "--manifest-path",
+      toml,
+      "mojo",
+      "--version",
+    ]);
+    const m = /Mojo ([\w.]+)/.exec(r.stdout + r.stderr);
+    if (m) return m[1];
+  }
+  return "unknown";
+}
+
 function toolchain() {
   const v = (
     /** @type {string} */ cmd,
@@ -733,17 +794,7 @@ function toolchain() {
     llvm: v(tool("mlir-opt"), ["--version"], /LLVM version ([\w.]+)/),
     python: v("python3", ["--version"], /Python ([\w.]+)/),
     node: process.version,
-    mojo: v(
-      "pixi",
-      [
-        "run",
-        "--manifest-path",
-        path.join(srcDir("nano-dsp-mlir"), "pixi.toml"),
-        "mojo",
-        "--version",
-      ],
-      /Mojo ([\w.]+)/,
-    ),
+    mojo: mojoVersion(),
     rustc: v("rustc", ["--version"], /rustc ([\w.]+)/),
   };
 }

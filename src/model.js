@@ -2,6 +2,8 @@
 // project contributes. JSDoc types are checked by `tsc`; the validators below
 // are what the build, the capture script and the tests actually enforce.
 
+import { validateTrace } from "./trace.js";
+
 /** The pipeline stages the portal is organised around, in order. */
 export const STAGES = /** @type {const} */ ([
   "source",
@@ -26,6 +28,7 @@ export const ARTIFACT_KINDS = /** @type {const} */ ([
   "profile",
   "execution",
   "test-run",
+  "trace",
 ]);
 
 /** @typedef {typeof STAGES[number]} Stage */
@@ -101,11 +104,12 @@ export const ARTIFACT_KINDS = /** @type {const} */ ([
 /** @typedef {ArtifactBase & { kind: "profile", metric: string, unit: string, total: number, entries: ProfileEntry[] }} ProfileArtifact */
 /** @typedef {ArtifactBase & { kind: "execution", exitCode: number, stdout: string, expected?: string[] }} ExecutionArtifact */
 /** @typedef {ArtifactBase & { kind: "test-run", runner: string, passed: number, failed: number, errors: number, skipped: number, log: string }} TestRunArtifact */
+/** @typedef {ArtifactBase & { kind: "trace", trace: import("./trace.js").Trace }} TraceArtifact The front end's own trace file, kept verbatim. */
 /** @typedef {ArtifactBase & { provenance: Provenance & { mode: "unavailable" } }} UnavailableArtifact */
 
 /**
  * @typedef {SourceArtifact | DiagnosticArtifact | IRSnapshotArtifact | PassEventArtifact
- *   | ProfileArtifact | ExecutionArtifact | TestRunArtifact} Artifact
+ *   | ProfileArtifact | ExecutionArtifact | TestRunArtifact | TraceArtifact} Artifact
  */
 
 /**
@@ -226,6 +230,7 @@ const KIND_FIELDS = {
     skipped: "number",
     log: "string",
   },
+  trace: { trace: "object" },
 };
 
 /**
@@ -285,6 +290,8 @@ export function validateArtifact(a) {
     )
       errs.push(`${at}: diff needs tool and rows`);
   }
+  if (a.kind === "trace" && typeof a.trace === "object")
+    errs.push(...validateTrace(a.trace).map((e) => `${at}: ${e}`));
   if (a.kind === "profile" && Array.isArray(a.entries))
     for (const e of a.entries)
       if (

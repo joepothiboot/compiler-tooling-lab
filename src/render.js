@@ -1,6 +1,8 @@
 // HTML rendering: pure functions from manifest + content + artifacts to strings.
 // Output is one static article page; small scripts enhance it progressively.
 
+import { esc } from "./esc.js";
+import { renderTraceViewer } from "./render-trace.js";
 import { STAGES } from "./model.js";
 
 /** @typedef {import("./model.js").Project} Project */
@@ -26,16 +28,6 @@ export const STAGE_LABEL = {
 };
 
 const LONG_LINES = 40;
-
-/** @param {unknown} s */
-export const esc = (s) =>
-  String(s).replace(
-    /[&<>"']/g,
-    (c) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
-        c
-      ] ?? c,
-  );
 
 /** Renders `code` spans in otherwise escaped prose. */
 const prose = (/** @type {string} */ s) =>
@@ -147,6 +139,8 @@ function renderBody(ctx, { artifact: a, project: p }) {
         : "";
       return `<p class="meta">Exit code ${a.exitCode}</p>${codeBlock(a.stdout, a.title)}${check}`;
     }
+    case "trace":
+      return renderTraceViewer(a.trace);
     case "test-run": {
       const counts = `<p class="counts"><strong>${a.passed} passed</strong>, ${a.failed} failed, ${a.errors} errors, ${a.skipped} skipped/deselected <span class="meta">(${esc(a.runner)})</span></p>`;
       return `${counts}<details><summary>Test log</summary><pre tabindex="0"><code>${esc(a.log)}</code></pre></details>`;
@@ -275,6 +269,7 @@ export function page({ title, description, base, body, ctx }) {
 <script type="module" src="${base}assets/theme.js"></script>
 <script type="module" src="${base}assets/notes.js"></script>
 <script type="module" src="${base}assets/terminal.js"></script>
+<script type="module" src="${base}assets/trace-viewer.js"></script>
 </head>
 <body data-base="${base}">
 <a class="skip" href="#main">Skip to content</a>
@@ -292,7 +287,7 @@ ${body}
  * A note is supporting material (captured output, architecture, run steps)
  * kept out of the prose. It renders in the appendix; notes.js opens it in a
  * dialog when its link is clicked.
- * @typedef {{ id: string, title: string, from: string, body: string }} Note
+ * @typedef {{ id: string, title: string, from: string, body: string, wide?: boolean }} Note
  */
 
 /** @param {Note} n */
@@ -300,7 +295,7 @@ const noteLink = (n, label = n.title) => `<a href="#${esc(n.id)}">${label}</a>`;
 
 /** @param {Note} n */
 function renderNote(n) {
-  return `<section class="note" id="${esc(n.id)}" aria-labelledby="${esc(n.id)}-h"><p class="note-from">${esc(n.from)}</p><h3 id="${esc(n.id)}-h">${esc(n.title)}</h3>${n.body}</section>`;
+  return `<section class="note" id="${esc(n.id)}"${n.wide ? " data-wide" : ""} aria-labelledby="${esc(n.id)}-h"><p class="note-from">${esc(n.from)}</p><h3 id="${esc(n.id)}-h">${esc(n.title)}</h3>${n.body}</section>`;
 }
 
 /**
@@ -353,8 +348,9 @@ function projectEntry(ctx, p) {
     /** @type {string} */ slug,
     /** @type {string} */ title,
     /** @type {string} */ body,
+    /** @type {boolean} */ wide = false,
   ) => {
-    const x = { id: `note-${p.id}-${slug}`, title, from: p.name, body };
+    const x = { id: `note-${p.id}-${slug}`, title, from: p.name, body, wide };
     notes.push(x);
     return x;
   };
@@ -369,6 +365,9 @@ function projectEntry(ctx, p) {
     .map((s, i) => {
       const arts = s.artifacts ?? [];
       const body =
+        (s.trace
+          ? `<p class="callout-link"><a href="#note-${esc(p.id)}-trace">Open the front-end trace viewer</a> (source, tokens, AST and IR, linked).</p>`
+          : "") +
         (s.timeline ? renderTimeline(ctx, s.timeline) : "") +
         arts.map((id) => renderArtifact(ctx, id, 5)).join("");
       return `<h4 id="${esc(p.id)}-${i + 1}">${i + 1}. ${esc(s.title)}</h4><p>${prose(s.text)}</p>${body}`;
@@ -407,6 +406,15 @@ function projectEntry(ctx, p) {
     `${c.tests.map((id) => renderArtifact(ctx, id, 4)).join("")}${benches}`,
   );
 
+  const traceNote = c.trace
+    ? note(
+        "trace",
+        "Front-end trace viewer",
+        `${c.traceIntro?.map((t) => `<p>${prose(t)}</p>`).join("")}<p class="meta no-js-only">Without JavaScript the panes below are plain dumps, one after another, with the AST fully expanded; nothing is highlighted.</p>${renderArtifact(ctx, c.trace, 4)}`,
+        true,
+      )
+    : null;
+
   const links = [
     `<a href="${esc(gh(p, "tree"))}">code</a>`,
     `<a href="${esc(gh(p, "blob", p.docsPath))}">docs</a>`,
@@ -415,6 +423,7 @@ function projectEntry(ctx, p) {
     noteLink(archNote, "architecture"),
     noteLink(runNote, "run"),
     noteLink(testsNote, "tests"),
+    ...(traceNote ? [noteLink(traceNote, "trace viewer")] : []),
   ];
   const thumbTitle = lookup(ctx, c.thumb).artifact.title;
 

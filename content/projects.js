@@ -8,6 +8,7 @@
  * @property {string} text          Plain text; rendered escaped.
  * @property {string[]} [artifacts] Artifact ids rendered after the text.
  * @property {string} [timeline]    Artifact-id prefix whose pass events render as a table.
+ * @property {boolean} [trace]      Adds a link to the project's trace viewer note.
  */
 
 /**
@@ -23,6 +24,8 @@
  * @property {string[]} benchmarks  Artifact ids of profile (or unavailable) artifacts.
  * @property {string} quickDemo
  * @property {string} thumb         Artifact id drawn as the list thumbnail.
+ * @property {string} [trace]       Artifact id of a `trace` artifact; adds the trace viewer note.
+ * @property {string[]} [traceIntro] Paragraphs of prose above the viewer.
  * @property {TourStep[]} tour
  */
 
@@ -43,7 +46,7 @@ export const PROJECTS = {
     purpose: [
       "json-schema-mlir represents JSON Schema validation rules as operations in a `schema` dialect. Constraints are optimized as IR (subsumption, fusion, removing redundant checks) before being lowered to arith/scf/math and the LLVM dialect.",
       "The same constraint lattice also exists as a Mojo library (`mojo/schema/`), with the canonicalizer's subsumption and meet rules and the lowered validation semantics. Its tests check that merging two constraints never changes which values are accepted.",
-      "At the pinned commit, the entry point is `schema-opt` on `.mlir` input. The JSON-to-IR front end shown in the upstream pipeline diagram is not in the tree yet.",
+      "At the pinned commit the front end is in the tree: `schema-translate --import-json-schema` lexes and parses a JSON Schema file, builds an AST with source ranges, and imports it as schema-dialect IR. `schema-opt` then takes `.mlir` input through the passes. The tour starts from the front end, using the Person example; the later steps use the repository's own canonicalization test inputs.",
     ],
     architecture: [
       {
@@ -86,7 +89,17 @@ export const PROJECTS = {
     quickDemo:
       "Follow one real test function from the dialect, through canonicalization and lowering, to the LLVM dialect, plus one verifier diagnostic.",
     thumb: "schema-input",
+    trace: "schema-trace",
+    traceIntro: [
+      "`schema-translate --emit-trace` writes what its front end saw and did as one JSON file: the source, the lexer's tokens, the AST with byte ranges, and the IR after import and after `--schema-canonicalize`, with each op tied back to the AST nodes it came from. This viewer draws that file and nothing else; the compiler does not run in your browser.",
+      "The Person schema's `age` combines three `allOf` branches. In the IR pane they are separate checks after import, and one `validate_number` after canonicalization. Select that one, and every imported op it absorbed lights up, along with the six JSON keywords it came from.",
+    ],
     tour: [
+      {
+        title: "Follow one schema through the front end",
+        text: "examples/person/person.schema.json goes through the lexer, the parser and the importer. The trace viewer links the JSON source, its tokens, the AST and the IR, and shows canonicalization fusing the three allOf branches into one validate_number.",
+        trace: true,
+      },
       {
         title: "Start from a real test input",
         text: "Three validate_string checks on the same value, combined with arith.andi. This function comes verbatim from the repository's canonicalization tests.",

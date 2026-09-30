@@ -10,9 +10,9 @@
       "id": "schema-mlir",
       "name": "json-schema-mlir",
       "repo": "joepothiboot/json-schema-mlir",
-      "version": "v0.1.0-12-g6f4be81",
+      "version": "v0.1.0-17-g4bf48ec",
       "releaseTag": "v0.1.0",
-      "commit": "6f4be813566745002c9bebcb8b4b929bade347cd",
+      "commit": "4bf48ec8181ed694afae370c8e84c7d73454d923",
       "docsPath": "README.md",
       "stages": [
         "source",
@@ -20,6 +20,7 @@
         "mlir"
       ],
       "capabilities": [
+        "JSON Schema front end: lexer, parser and importer to schema-dialect IR, with --emit-trace",
         "schema dialect for JSON Schema string and number constraints",
         "Constraint-lattice canonicalization (subsumption, fusion)",
         "Lowering to arith/scf/math/func and the LLVM dialect",

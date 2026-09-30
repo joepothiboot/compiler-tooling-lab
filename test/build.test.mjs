@@ -76,6 +76,29 @@ test("each project links its walkthrough, architecture, run steps and tests", ()
   }
 });
 
+test("json-schema-mlir has a trace viewer note with provenance and a static fallback", () => {
+  const html = read("index.html");
+  assert.ok(html.includes('href="#note-schema-mlir-trace"'), "linked");
+  assert.match(
+    html,
+    /<section class="note" id="note-schema-mlir-trace" data-wide /,
+    "wide note",
+  );
+  const note = html.slice(html.indexOf('id="note-schema-mlir-trace"'));
+  const art = note.slice(
+    0,
+    note.indexOf("</section>", note.indexOf("data-artifact")),
+  );
+  assert.match(art, /data-artifact="schema-trace"/);
+  assert.match(art, /class="badge captured"/);
+  assert.match(art, /--emit-trace=person\.trace\.json/);
+  for (const pane of ["src", "tok", "ast", "ir"])
+    assert.ok(art.includes(`data-pane="${pane}"`), pane);
+  assert.match(art, /<details open>/, "AST is expanded without JS");
+  assert.match(art, /Without JavaScript/);
+  assert.match(html, /assets\/trace-viewer\.js/);
+});
+
 test("in-page links resolve and ids are unique", () => {
   for (const page of pages()) {
     const html = read(page);

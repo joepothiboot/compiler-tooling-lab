@@ -51,11 +51,16 @@ export function loadContext(root = ROOT) {
       ...c.tests,
       ...c.benchmarks,
       c.thumb,
+      ...(c.trace ? [c.trace] : []),
       ...c.tour.flatMap((/** @type {any} */ s) => s.artifacts ?? []),
     ];
     for (const id of refs)
       if (!artifacts.has(id))
         errs.push(`${project.id}: content references missing artifact ${id}`);
+    if (c.trace && artifacts.get(c.trace)?.artifact.kind !== "trace")
+      errs.push(`${project.id}: ${c.trace} is not a trace artifact`);
+    if (c.trace && !c.traceIntro)
+      errs.push(`${project.id}: a trace needs traceIntro text`);
     for (const a of artifacts.values()) {
       const pe = a.artifact;
       if (pe.kind === "pass-event" && pe.provenance.mode !== "unavailable")
@@ -110,6 +115,10 @@ export function build({ out, root = ROOT }) {
   write(
     "assets/terminal.js",
     fs.readFileSync(path.join(root, "src/terminal.js")),
+  );
+  write(
+    "assets/trace-viewer.js",
+    fs.readFileSync(path.join(root, "src/trace-viewer.js")),
   );
   write(".nojekyll", "");
   return written;

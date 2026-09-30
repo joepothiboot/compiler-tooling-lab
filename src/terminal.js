@@ -78,6 +78,7 @@ const ICON = /** @type {Record<string, string>} */ ({
   "test-run": "🧪",
   profile: "📊",
   "pass-event": "🔀",
+  trace: "🧾",
 });
 const iconOf = (/** @type {Json} */ a) =>
   a.provenance.mode === "unavailable" ? "🚫" : (ICON[a.kind] ?? "📄");
@@ -218,6 +219,29 @@ function outputOf(/** @type {Json} */ a) {
       return [
         { parts },
         plain(`⏱️ total ${a.total} ${a.unit} (${a.metric})`, "dim"),
+      ];
+    }
+    case "trace": {
+      const t = a.trace;
+      const count = (/** @type {Json | null} */ n) =>
+        n
+          ? 1 +
+            n.children.reduce(
+              (/** @type {number} */ sum, /** @type {Json} */ c) =>
+                sum + count(c),
+              0,
+            )
+          : 0;
+      return [
+        plain(
+          `${t.source.file}: ${t.tokens.length} tokens, ${count(t.ast)} AST nodes, ${t.diagnostics.length} diagnostics`,
+        ),
+        ...t.stages.map((/** @type {Json} */ s) =>
+          plain(
+            `${s.name}: ${s.ops.length} ops, ${s.ir.trimEnd().split("\n").length} IR lines`,
+          ),
+        ),
+        plain("Open the trace viewer on the page to explore it.", "dim"),
       ];
     }
     case "pass-event": {

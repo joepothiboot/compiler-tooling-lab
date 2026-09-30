@@ -42,6 +42,7 @@ if (appendix && typeof HTMLDialogElement === "function") {
     note.replaceWith(home);
     body.replaceChildren(note);
     dialog.setAttribute("aria-labelledby", `${note.id}-h`);
+    dialog.classList.toggle("wide", note.hasAttribute("data-wide"));
     history.replaceState(null, "", `#${note.id}`);
     if (!dialog.open) dialog.showModal();
     body.scrollTop = 0;
