@@ -7,11 +7,54 @@ developer-tooling pipeline:
 
 🌐 **Live site:** https://joepothiboot.github.io/compiler-tooling-lab/
 
-| Order | Project                                                              | Role in the pipeline                 |
-| ----- | -------------------------------------------------------------------- | ------------------------------------ |
-| 1     | [json-schema-mlir](https://github.com/joepothiboot/json-schema-mlir) | Source, diagnostics, MLIR lowering   |
-| 2     | [VizMLIR](https://github.com/joepothiboot/vizmlir)                   | Pass inspection (WASM parser + diff) |
-| 3     | [nano-dsp-mlir](https://github.com/joepothiboot/nano-dsp-mlir)       | MLIR lowering, execution, profiling  |
+| Order | Project                                                              | Role in the pipeline                                       |
+| ----- | -------------------------------------------------------------------- | ---------------------------------------------------------- |
+| 1     | [json-schema-mlir](https://github.com/joepothiboot/json-schema-mlir) | Source, diagnostics, MLIR lowering                         |
+| 2     | [VizMLIR](https://github.com/joepothiboot/vizmlir)                   | Pass inspection and a GPU view of the IR (WASM parser)     |
+| 3     | [nano-dsp-mlir](https://github.com/joepothiboot/nano-dsp-mlir)       | MLIR lowering, tiling, vectorization, execution, profiling |
+
+## 📦 The three projects
+
+Each is pinned to a full commit in `manifest.json`. The test counts are the
+results captured from that commit's own runners.
+
+### 📐 json-schema-mlir (`914691c`)
+
+An out-of-tree MLIR dialect that compiles JSON Schema (Draft 2020-12) into
+native validators.
+
+- A hand-written front end: lexer, recursive-descent parser and importer into
+  the `schema` dialect, one op per keyword, located at that keyword.
+  `--emit-trace` writes the whole run for the trace viewer.
+- Constraint-lattice canonicalization (subsumption, fusion), then lowering to
+  `arith`/`scf`/`math`/`func` and the LLVM dialect.
+- A Mojo library with the same lattice, tested for soundness of `meet`.
+- Captured: 11 lit tests and 12 Mojo tests, all passing.
+
+### 🔍 VizMLIR (`4064da8`)
+
+A browser tool that reads `mlir-opt` pass traces and draws what the IR means.
+
+- A GPU view: launches as blocks and warps, buffers by memory space, and a
+  coalesced, strided, misaligned or bank-conflict verdict per access, proven for
+  every warp when addresses are linear. Triton GPU IR is read too.
+- Step through a pipeline with before/after diffs, op counts, pass timing and
+  buffer lifetimes.
+- Everything runs in the browser; the portal links to its live app.
+- Captured: 330 vitest tests, all passing.
+
+### ⚡ nano-dsp-mlir (`0de4c3c`)
+
+A small MLIR compiler for a tensor DSL.
+
+- A `dsp` dialect (`add`, `relu`, `matmul`, `conv2d` and the int8 `qmatmul`)
+  lowered to `linalg.generic` and on to LLVM.
+- Tiling and vectorization from a Transform-dialect schedule generated from a
+  target model, checked bit for bit against the unscheduled code.
+- SIMD Mojo kernels and a scalar C++ reference tested against the same values.
+- Captured: 23 lit tests, 17 Mojo tests and 7 C++ reference tests, all passing.
+- Not captured here: the emulated Hexagon run and the benchmark comparison of
+  tiled MLIR kernels against Mojo, which is not done yet.
 
 The site is one static article page: each project is a section of the prose,
 and its captured outputs, architecture, run steps and tests open in a closable
@@ -19,6 +62,12 @@ dialog from links in the text (an appendix when JS is off). It is plain HTML,
 CSS and a few lines of vanilla JS. No framework,
 bundler, WASM or runtime dependency. VizMLIR's interactive app is linked at
 [its own site](https://joepothiboot.github.io/vizmlir/).
+
+The json-schema-mlir section also carries a **trace viewer**: it draws the file
+`schema-translate --emit-trace` writes (source, tokens, AST and the IR before and
+after canonicalization, tied to source ranges) and links each op back to the
+JSON that produced it. The viewer only reads the captured trace; the compiler
+does not run in your browser.
 
 ## 📏 Rules
 
@@ -69,8 +118,10 @@ artifacts/<id>.json      captured/static/unavailable artifacts per project (gene
 inputs/                  inputs written for this lab (clearly labelled on the site)
 src/model.js             shared data model: JSDoc types + validators
 src/parse.js             parsers for real tool output (diagnostics, IR dumps, timing, lit, vitest, Mojo/C++ tests)
+src/trace.js             validates and indexes a schema-translate --emit-trace file
 src/render.js            HTML rendering (pure functions): the article and its notes
-src/site.css, *.js       the only shipped CSS/JS (notes.js opens notes as dialogs)
+src/render-trace.js      static markup for the trace viewer
+src/site.css, *.js       the only shipped CSS/JS (notes.js opens notes as dialogs, trace-viewer.js drives the trace viewer)
 scripts/capture.sh|.mjs  clone at pin → build → run tools → artifacts/
 scripts/build.mjs        validate everything → dist/
 scripts/update-manifest.mjs, reconcile.mjs, lib-git.mjs   synchronization
@@ -80,7 +131,8 @@ test/                    unit tests + an integration test over the built site
 ### 🧬 Shared data model
 
 All three projects contribute the same artifact kinds, defined in
-[`src/model.js`](src/model.js):
+[`src/model.js`](src/model.js). A `trace` kind (the front end's own trace file,
+kept verbatim) is used by json-schema-mlir only:
 
 | Kind          | Carries                                                                   |
 | ------------- | ------------------------------------------------------------------------- |
@@ -130,3 +182,7 @@ then `bash scripts/capture.sh`.
 - Inputs written for the lab go in `inputs/`; they render as lab files, never as
   project files.
 - Run `npm run check` before opening a PR.
+
+## 📜 License
+
+MIT. See [`LICENSE`](LICENSE).

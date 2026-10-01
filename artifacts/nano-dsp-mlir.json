@@ -1,8 +1,8 @@
 {
   "project": "nano-dsp-mlir",
-  "commit": "ccb09e1b01eb6ae5dd0fe9e6108eeb90d2a08ae5",
+  "commit": "0de4c3c45b25a06758c2f28e26f25cc88aa9dfd1",
   "capture": {
-    "capturedAt": "2026-09-27T14:38:42.141Z",
+    "capturedAt": "2026-10-01T14:15:07.786Z",
     "host": "darwin-arm64",
     "toolchain": {
       "llvm": "23.1.1",
@@ -18,11 +18,11 @@
       "kind": "test-run",
       "title": "lit regression suite (check-nanodsp)",
       "runner": "lit",
-      "passed": 15,
+      "passed": 23,
       "failed": 0,
       "errors": 0,
       "skipped": 0,
-      "log": "PASS: NANO-DSP-MLIR :: Dialect/DSP/invalid.mlir (1 of 15)\nPASS: NANO-DSP-MLIR :: Dialect/DSP/canonicalize.mlir (2 of 15)\nPASS: NANO-DSP-MLIR :: Dialect/DSP/ops.mlir (3 of 15)\nPASS: NANO-DSP-MLIR :: Conversion/DSPToLinalg/relu.mlir (4 of 15)\nPASS: NANO-DSP-MLIR :: Conversion/DSPToLinalg/matmul.mlir (5 of 15)\nPASS: NANO-DSP-MLIR :: Conversion/DSPToLinalg/add.mlir (6 of 15)\nPASS: NANO-DSP-MLIR :: Conversion/DSPToLinalg/conv2d.mlir (7 of 15)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/conv2d-multichannel.mlir (8 of 15)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/conv2d-strided.mlir (9 of 15)\nPASS: NANO-DSP-MLIR :: Integration/end-to-end.mlir (10 of 15)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/relu.mlir (11 of 15)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/matmul.mlir (12 of 15)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/conv2d.mlir (13 of 15)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/pipeline.mlir (14 of 15)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/add.mlir (15 of 15)\n\nTotal Discovered Tests: 15\n  Passed: 15 (100.00%)",
+      "log": "PASS: NANO-DSP-MLIR :: Conversion/DSPToLinalg/add.mlir (1 of 23)\nPASS: NANO-DSP-MLIR :: Conversion/DSPToLinalg/relu.mlir (2 of 23)\nPASS: NANO-DSP-MLIR :: Conversion/DSPToLinalg/qmatmul.mlir (3 of 23)\nPASS: NANO-DSP-MLIR :: Conversion/DSPToLinalg/matmul.mlir (4 of 23)\nPASS: NANO-DSP-MLIR :: Conversion/DSPToLinalg/conv2d.mlir (5 of 23)\nPASS: NANO-DSP-MLIR :: Dialect/DSP/canonicalize.mlir (6 of 23)\nPASS: NANO-DSP-MLIR :: Dialect/DSP/ops.mlir (7 of 23)\nPASS: NANO-DSP-MLIR :: Dialect/DSP/invalid.mlir (8 of 23)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/add.mlir (9 of 23)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/conv2d.mlir (10 of 23)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/conv2d-strided.mlir (11 of 23)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/conv2d-multichannel.mlir (12 of 23)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/matmul.mlir (13 of 23)\nPASS: NANO-DSP-MLIR :: Integration/end-to-end.mlir (14 of 23)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/pipeline.mlir (15 of 23)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/relu.mlir (16 of 23)\nPASS: NANO-DSP-MLIR :: Schedule/codegen.mlir (17 of 23)\nPASS: NANO-DSP-MLIR :: Schedule/optimize.mlir (18 of 23)\nPASS: NANO-DSP-MLIR :: Schedule/emit-schedule.mlir (19 of 23)\nPASS: NANO-DSP-MLIR :: Hexagon/kernels-i8.mlir (20 of 23)\nPASS: NANO-DSP-MLIR :: Integration/DSPToLinalg/qmatmul.mlir (21 of 23)\nPASS: NANO-DSP-MLIR :: Hexagon/kernels-f32.mlir (22 of 23)\nPASS: NANO-DSP-MLIR :: Integration/Schedule/bit-exact.mlir (23 of 23)\n\nTotal Discovered Tests: 23\n  Passed: 23 (100.00%)",
       "provenance": {
         "mode": "captured",
         "command": "lit -v build/test"
@@ -501,7 +501,7 @@
       "kind": "execution",
       "title": "Executed with mlir-runner",
       "exitCode": 0,
-      "stdout": "Unranked Memref base@ = 0x7c52d4d540 rank = 4 offset = 0 sizes = [1, 2, 2, 1] strides = [4, 2, 1, 1] data = \n[[[[0], \n   [3]], \n  [[30], \n   [39]]]]",
+      "stdout": "Unranked Memref base@ = 0x79730d5540 rank = 4 offset = 0 sizes = [1, 2, 2, 1] strides = [4, 2, 1, 1] data = \n[[[[0], \n   [3]], \n  [[30], \n   [39]]]]",
       "expected": [
         "rank = 4 offset = 0 sizes = [1, 2, 2, 1]",
         "0",
@@ -721,6 +721,150 @@
         },
         {
           "severity": "error",
+          "message": "'dsp.qmatmul' op operand #0 must be statically shaped rank-2 tensor of i8, but got 'tensor<2x3xf32>'",
+          "location": {
+            "file": "test/Dialect/DSP/invalid.mlir",
+            "line": 94,
+            "column": 8
+          }
+        },
+        {
+          "severity": "note",
+          "message": "see current operation: %0 = \"dsp.qmatmul\"(%arg0, %arg1) <{lhs_zp = 0 : i32, multiplier = 1073741824 : i32, out_zp = 0 : i32, rhs_zp = 0 : i32, shift = 0 : i32}> : (tensor<2x3xf32>, tensor<3x4xf32>) -> tensor<2x4xf32>",
+          "location": {
+            "file": "test/Dialect/DSP/invalid.mlir",
+            "line": 94,
+            "column": 8
+          }
+        },
+        {
+          "severity": "error",
+          "message": "'dsp.qmatmul' op contraction dimension mismatch: lhs has K=3 but rhs has K=4",
+          "location": {
+            "file": "test/Dialect/DSP/invalid.mlir",
+            "line": 103,
+            "column": 8
+          }
+        },
+        {
+          "severity": "note",
+          "message": "see current operation: %0 = \"dsp.qmatmul\"(%arg0, %arg1) <{lhs_zp = 0 : i32, multiplier = 1073741824 : i32, out_zp = 0 : i32, rhs_zp = 0 : i32, shift = 0 : i32}> : (tensor<2x3xi8>, tensor<4x4xi8>) -> tensor<2x4xi8>",
+          "location": {
+            "file": "test/Dialect/DSP/invalid.mlir",
+            "line": 103,
+            "column": 8
+          }
+        },
+        {
+          "severity": "error",
+          "message": "'dsp.qmatmul' op result shape must be 2x4, got 4x2",
+          "location": {
+            "file": "test/Dialect/DSP/invalid.mlir",
+            "line": 112,
+            "column": 8
+          }
+        },
+        {
+          "severity": "note",
+          "message": "see current operation: %0 = \"dsp.qmatmul\"(%arg0, %arg1) <{lhs_zp = 0 : i32, multiplier = 1073741824 : i32, out_zp = 0 : i32, rhs_zp = 0 : i32, shift = 0 : i32}> : (tensor<2x3xi8>, tensor<3x4xi8>) -> tensor<4x2xi8>",
+          "location": {
+            "file": "test/Dialect/DSP/invalid.mlir",
+            "line": 112,
+            "column": 8
+          }
+        },
+        {
+          "severity": "error",
+          "message": "'dsp.qmatmul' op K=33026 can overflow the i32 accumulator (at most 33025)",
+          "location": {
+            "file": "test/Dialect/DSP/invalid.mlir",
+            "line": 121,
+            "column": 8
+          }
+        },
+        {
+          "severity": "note",
+          "message": "see current operation: %0 = \"dsp.qmatmul\"(%arg0, %arg1) <{lhs_zp = 0 : i32, multiplier = 1073741824 : i32, out_zp = 0 : i32, rhs_zp = 0 : i32, shift = 0 : i32}> : (tensor<1x33026xi8>, tensor<33026x1xi8>) -> tensor<1x1xi8>",
+          "location": {
+            "file": "test/Dialect/DSP/invalid.mlir",
+            "line": 121,
+            "column": 8
+          }
+        },
+        {
+          "severity": "error",
+          "message": "'dsp.qmatmul' op rhs_zp must be in [-128, 127], got -129",
+          "location": {
+            "file": "test/Dialect/DSP/invalid.mlir",
+            "line": 130,
+            "column": 8
+          }
+        },
+        {
+          "severity": "note",
+          "message": "see current operation: %0 = \"dsp.qmatmul\"(%arg0, %arg1) <{lhs_zp = 0 : i32, multiplier = 1073741824 : i32, out_zp = 0 : i32, rhs_zp = -129 : i32, shift = 0 : i32}> : (tensor<2x3xi8>, tensor<3x4xi8>) -> tensor<2x4xi8>",
+          "location": {
+            "file": "test/Dialect/DSP/invalid.mlir",
+            "line": 130,
+            "column": 8
+          }
+        },
+        {
+          "severity": "error",
+          "message": "'dsp.qmatmul' op multiplier must be normalized to [2^30, 2^31), got 536870912",
+          "location": {
+            "file": "test/Dialect/DSP/invalid.mlir",
+            "line": 139,
+            "column": 8
+          }
+        },
+        {
+          "severity": "note",
+          "message": "see current operation: %0 = \"dsp.qmatmul\"(%arg0, %arg1) <{lhs_zp = 0 : i32, multiplier = 536870912 : i32, out_zp = 0 : i32, rhs_zp = 0 : i32, shift = 0 : i32}> : (tensor<2x3xi8>, tensor<3x4xi8>) -> tensor<2x4xi8>",
+          "location": {
+            "file": "test/Dialect/DSP/invalid.mlir",
+            "line": 139,
+            "column": 8
+          }
+        },
+        {
+          "severity": "error",
+          "message": "'dsp.qmatmul' op multiplier must be normalized to [2^30, 2^31), got -1073741824",
+          "location": {
+            "file": "test/Dialect/DSP/invalid.mlir",
+            "line": 148,
+            "column": 8
+          }
+        },
+        {
+          "severity": "note",
+          "message": "see current operation: %0 = \"dsp.qmatmul\"(%arg0, %arg1) <{lhs_zp = 0 : i32, multiplier = -1073741824 : i32, out_zp = 0 : i32, rhs_zp = 0 : i32, shift = 0 : i32}> : (tensor<2x3xi8>, tensor<3x4xi8>) -> tensor<2x4xi8>",
+          "location": {
+            "file": "test/Dialect/DSP/invalid.mlir",
+            "line": 148,
+            "column": 8
+          }
+        },
+        {
+          "severity": "error",
+          "message": "'dsp.qmatmul' op shift must be in [0, 31], got -1",
+          "location": {
+            "file": "test/Dialect/DSP/invalid.mlir",
+            "line": 157,
+            "column": 8
+          }
+        },
+        {
+          "severity": "note",
+          "message": "see current operation: %0 = \"dsp.qmatmul\"(%arg0, %arg1) <{lhs_zp = 0 : i32, multiplier = 1073741824 : i32, out_zp = 0 : i32, rhs_zp = 0 : i32, shift = -1 : i32}> : (tensor<2x3xi8>, tensor<3x4xi8>) -> tensor<2x4xi8>",
+          "location": {
+            "file": "test/Dialect/DSP/invalid.mlir",
+            "line": 157,
+            "column": 8
+          }
+        },
+        {
+          "severity": "error",
           "message": "expected error \"requires the same type for all operands and results\" was not produced",
           "location": {
             "file": "test/Dialect/DSP/invalid.mlir",
@@ -817,6 +961,78 @@
             "line": 85,
             "column": 6
           }
+        },
+        {
+          "severity": "error",
+          "message": "expected error \"op operand #0 must be statically shaped rank-2 tensor of i8\" was not produced",
+          "location": {
+            "file": "test/Dialect/DSP/invalid.mlir",
+            "line": 93,
+            "column": 6
+          }
+        },
+        {
+          "severity": "error",
+          "message": "expected error \"contraction dimension mismatch: lhs has K=3 but rhs has K=4\" was not produced",
+          "location": {
+            "file": "test/Dialect/DSP/invalid.mlir",
+            "line": 102,
+            "column": 6
+          }
+        },
+        {
+          "severity": "error",
+          "message": "expected error \"result shape must be 2x4, got 4x2\" was not produced",
+          "location": {
+            "file": "test/Dialect/DSP/invalid.mlir",
+            "line": 111,
+            "column": 6
+          }
+        },
+        {
+          "severity": "error",
+          "message": "expected error \"K=33026 can overflow the i32 accumulator (at most 33025)\" was not produced",
+          "location": {
+            "file": "test/Dialect/DSP/invalid.mlir",
+            "line": 120,
+            "column": 6
+          }
+        },
+        {
+          "severity": "error",
+          "message": "expected error \"rhs_zp must be in [-128, 127], got -129\" was not produced",
+          "location": {
+            "file": "test/Dialect/DSP/invalid.mlir",
+            "line": 129,
+            "column": 6
+          }
+        },
+        {
+          "severity": "error",
+          "message": "expected error \"multiplier must be normalized to [2^30, 2^31), got 536870912\" was not produced",
+          "location": {
+            "file": "test/Dialect/DSP/invalid.mlir",
+            "line": 138,
+            "column": 6
+          }
+        },
+        {
+          "severity": "error",
+          "message": "expected error \"multiplier must be normalized to [2^30, 2^31), got -1073741824\" was not produced",
+          "location": {
+            "file": "test/Dialect/DSP/invalid.mlir",
+            "line": 147,
+            "column": 6
+          }
+        },
+        {
+          "severity": "error",
+          "message": "expected error \"shift must be in [0, 31], got -1\" was not produced",
+          "location": {
+            "file": "test/Dialect/DSP/invalid.mlir",
+            "line": 156,
+            "column": 6
+          }
         }
       ],
       "provenance": {
@@ -834,20 +1050,20 @@
       "entries": [
         {
           "name": "Parser",
-          "value": 0.001,
-          "percent": 14.3,
+          "value": 0.0011,
+          "percent": 15.3,
           "depth": 0
         },
         {
           "name": "ConvertDSPToLinalg",
           "value": 0.0003,
-          "percent": 3.9,
+          "percent": 4,
           "depth": 0
         },
         {
           "name": "OneShotBufferizePass",
           "value": 0.0003,
-          "percent": 4.3,
+          "percent": 4.5,
           "depth": 0
         },
         {
@@ -858,14 +1074,14 @@
         },
         {
           "name": "CanonicalizerPass",
-          "value": 0.0002,
-          "percent": 2.2,
+          "value": 0.0001,
+          "percent": 2,
           "depth": 0
         },
         {
           "name": "OwnershipBasedBufferDeallocationPass",
           "value": 0.0001,
-          "percent": 1.9,
+          "percent": 1.8,
           "depth": 0
         },
         {
@@ -883,13 +1099,13 @@
         {
           "name": "LowerDeallocationsPass",
           "value": 0.0001,
-          "percent": 1.4,
+          "percent": 1.2,
           "depth": 0
         },
         {
           "name": "CSEPass",
           "value": 0,
-          "percent": 0.6,
+          "percent": 0.3,
           "depth": 0
         },
         {
@@ -907,7 +1123,7 @@
         {
           "name": "ConvertLinalgToLoopsPass",
           "value": 0.0004,
-          "percent": 5.7,
+          "percent": 6.3,
           "depth": 0
         },
         {
@@ -919,7 +1135,7 @@
         {
           "name": "ExpandStridedMetadataPass",
           "value": 0.0002,
-          "percent": 2.8,
+          "percent": 3.2,
           "depth": 0
         },
         {
@@ -931,55 +1147,55 @@
         {
           "name": "ArithToLLVMConversionPass",
           "value": 0.0004,
-          "percent": 5.8,
+          "percent": 5.9,
           "depth": 0
         },
         {
           "name": "FinalizeMemRefToLLVMConversionPass",
           "value": 0.0006,
-          "percent": 8,
+          "percent": 8.6,
           "depth": 0
         },
         {
           "name": "(A) DataLayoutAnalysis",
           "value": 0,
-          "percent": 0.1,
+          "percent": 0.2,
           "depth": 1
         },
         {
           "name": "ConvertFuncToLLVMPass",
           "value": 0.0003,
-          "percent": 4.4,
+          "percent": 3.6,
           "depth": 0
         },
         {
           "name": "(A) DataLayoutAnalysis",
           "value": 0,
-          "percent": 0.1,
+          "percent": 0.3,
           "depth": 1
         },
         {
           "name": "ConvertControlFlowToLLVMPass",
-          "value": 0.0004,
-          "percent": 5.1,
+          "value": 0.0003,
+          "percent": 4.6,
           "depth": 0
         },
         {
           "name": "ReconcileUnrealizedCastsPass",
           "value": 0.0002,
-          "percent": 2.5,
+          "percent": 2.7,
           "depth": 0
         },
         {
           "name": "Output",
           "value": 0.0004,
-          "percent": 5.3,
+          "percent": 5.4,
           "depth": 0
         },
         {
           "name": "Rest",
-          "value": 0.0015,
-          "percent": 20.7,
+          "value": 0.0014,
+          "percent": 19.3,
           "depth": 0
         }
       ],
@@ -993,11 +1209,11 @@
       "kind": "test-run",
       "title": "Mojo kernel tests",
       "runner": "mojo",
-      "passed": 12,
+      "passed": 17,
       "failed": 0,
       "errors": 0,
       "skipped": 0,
-      "log": "nanodsp: 12 tests passed\n✨ Pixi task (test-mojo): mojo run -I mojo mojo/tests/test_kernels.mojo",
+      "log": "nanodsp: 17 tests passed\n✨ Pixi task (test-mojo): mojo run -I mojo mojo/tests/test_kernels.mojo",
       "provenance": {
         "mode": "captured",
         "command": "pixi run test-mojo"
@@ -1008,11 +1224,11 @@
       "kind": "test-run",
       "title": "C++ reference tests",
       "runner": "c++",
-      "passed": 5,
+      "passed": 7,
       "failed": 0,
       "errors": 0,
       "skipped": 0,
-      "log": "PASS add\nPASS relu\nPASS relu propagates NaN\nPASS matmul\nPASS conv2d",
+      "log": "PASS add\nPASS relu\nPASS relu propagates NaN\nPASS matmul\nPASS conv2d\nPASS qmatmul zero points + rounding\nPASS qmatmul fractional multiplier",
       "provenance": {
         "mode": "captured",
         "command": "pixi run test-reference"
@@ -1023,7 +1239,7 @@
       "kind": "execution",
       "title": "Mojo kernel throughput (untiled, one core, best of 3-5 runs)",
       "exitCode": 0,
-      "stdout": "matmul   64 x 64 x 64    0.031 ms   16.91251612903226 GFLOP/s\nmatmul   128 x 128 x 128    0.199 ms   21.076904522613066 GFLOP/s\nmatmul   256 x 256 x 256    1.443 ms   23.25324462924463 GFLOP/s\nmatmul   512 x 512 x 512    13.844 ms   19.39002138110373 GFLOP/s\nconv2d   56 x 56 x 64 -> 64    13.663 ms   15.735259313474346 GFLOP/s\nconv2d   28 x 28 x 128 -> 128    9.178 ms   21.72156373937677 GFLOP/s",
+      "stdout": "matmul   64 x 64 x 64    0.032 ms   16.384 GFLOP/s\nmatmul   128 x 128 x 128    0.195 ms   21.50925128205128 GFLOP/s\nmatmul   256 x 256 x 256    1.451 ms   23.125039283252928 GFLOP/s\nmatmul   512 x 512 x 512    13.875 ms   19.34669953153153 GFLOP/s\nconv2d   56 x 56 x 64 -> 64    12.918 ms   16.642734788666978 GFLOP/s\nconv2d   28 x 28 x 128 -> 128    9.235 ms   21.587494531672984 GFLOP/s",
       "provenance": {
         "mode": "captured",
         "command": "pixi run bench"
