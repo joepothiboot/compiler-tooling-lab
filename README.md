@@ -30,6 +30,7 @@ native validators.
   `arith`/`scf`/`math`/`func` and the LLVM dialect.
 - A Mojo library with the same lattice, tested for soundness of `meet`.
 - Captured: 11 lit tests and 12 Mojo tests, all passing.
+- Details: [`docs/trace-format.md`](https://github.com/joepothiboot/json-schema-mlir/blob/914691c49d2d685f26fb67e5ebd08ed968ea4fe7/docs/trace-format.md) and its README (keywords, runtime ABI, pass flags).
 
 ### 🔍 VizMLIR (`4064da8`)
 
@@ -37,11 +38,22 @@ A browser tool that reads `mlir-opt` pass traces and draws what the IR means.
 
 - A GPU view: launches as blocks and warps, buffers by memory space, and a
   coalesced, strided, misaligned or bank-conflict verdict per access, proven for
-  every warp when addresses are linear. Triton GPU IR is read too.
+  every warp when addresses are linear.
+- NVIDIA GPU code (CUDA) is followed through MLIR: `gpu.launch`, `affine`
+  index math, NVVM thread and block ids and loads and stores in the LLVM
+  dialect, down to the PTX that comes out. It reads MLIR, not CUDA C++ source.
+- Triton GPU IR (`tt.`/`ttg.`): which thread holds which element under a
+  `#blocked` layout, with proven verdicts for every `tt.load` and `tt.store`.
+  The Triton sample is hand-written in Triton 3.x TTGIR format, because Triton
+  does not run on macOS; the CUDA-path samples are real `mlir-opt` output.
+- VizMLIR only reads IR and never runs it, so it gives verdicts, not timings.
+  Timings from Nsight Systems, Nsight Compute or Google Benchmark can be
+  imported and lined up with the passes.
 - Step through a pipeline with before/after diffs, op counts, pass timing and
   buffer lifetimes.
 - Everything runs in the browser; the portal links to its live app.
 - Captured: 330 vitest tests, all passing.
+- Details: [`docs/trace-format.md`](https://github.com/joepothiboot/vizmlir/blob/4064da83a3cb52ad82434b681139efa4ab8ae7cc/docs/trace-format.md), [`docs/benchmark-format.md`](https://github.com/joepothiboot/vizmlir/blob/4064da83a3cb52ad82434b681139efa4ab8ae7cc/docs/benchmark-format.md) and the in-app **Learn** guide.
 
 ### ⚡ nano-dsp-mlir (`0de4c3c`)
 
@@ -53,6 +65,7 @@ A small MLIR compiler for a tensor DSL.
   target model, checked bit for bit against the unscheduled code.
 - SIMD Mojo kernels and a scalar C++ reference tested against the same values.
 - Captured: 23 lit tests, 17 Mojo tests and 7 C++ reference tests, all passing.
+- Details: [`docs/02-tiling-model.md`](https://github.com/joepothiboot/nano-dsp-mlir/blob/0de4c3c45b25a06758c2f28e26f25cc88aa9dfd1/docs/02-tiling-model.md), [`docs/quantization.md`](https://github.com/joepothiboot/nano-dsp-mlir/blob/0de4c3c45b25a06758c2f28e26f25cc88aa9dfd1/docs/quantization.md), [`docs/hexagon-target.md`](https://github.com/joepothiboot/nano-dsp-mlir/blob/0de4c3c45b25a06758c2f28e26f25cc88aa9dfd1/docs/hexagon-target.md).
 - Not captured here: the emulated Hexagon run and the benchmark comparison of
   tiled MLIR kernels against Mojo, which is not done yet.
 
