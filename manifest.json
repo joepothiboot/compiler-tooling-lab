@@ -10,9 +10,9 @@
       "id": "schema-mlir",
       "name": "json-schema-mlir",
       "repo": "joepothiboot/json-schema-mlir",
-      "version": "v0.1.0-17-g4bf48ec",
+      "version": "v0.1.0-21-g914691c",
       "releaseTag": "v0.1.0",
-      "commit": "4bf48ec8181ed694afae370c8e84c7d73454d923",
+      "commit": "914691c49d2d685f26fb67e5ebd08ed968ea4fe7",
       "docsPath": "README.md",
       "stages": [
         "source",
@@ -32,9 +32,9 @@
       "id": "vizmlir",
       "name": "VizMLIR",
       "repo": "joepothiboot/vizmlir",
-      "version": "v0.3.0-14-gb4f2c91",
+      "version": "v0.3.0-54-g4064da8",
       "releaseTag": "v0.3.0",
-      "commit": "b4f2c91a9b1734b03f8ea362c97e5597b0654080",
+      "commit": "4064da83a3cb52ad82434b681139efa4ab8ae7cc",
       "docsPath": "README.md",
       "liveUrl": "https://joepothiboot.github.io/vizmlir/",
       "stages": [
@@ -44,16 +44,18 @@
         "Browser-only MLIR parser compiled from Rust to WebAssembly",
         "Operation graph rendering on canvas",
         "SSA-renumbering-aware structural diff between two IR snapshots",
-        "Unit tests for the trace parser, diff and WASM bridge (vitest)"
+        "GPU view: launches as blocks and warps, with a memory verdict per access proven for every warp when addresses are linear",
+        "Triton GPU IR support: thread-to-element layouts and proven tt.load/tt.store verdicts",
+        "Unit tests for the trace parser, diff, GPU analysis and WASM bridge (vitest)"
       ]
     },
     {
       "id": "nano-dsp-mlir",
       "name": "nano-dsp-mlir",
       "repo": "joepothiboot/nano-dsp-mlir",
-      "version": "v0.1.0-6-gccb09e1",
+      "version": "v0.1.0-19-g0de4c3c",
       "releaseTag": "v0.1.0",
-      "commit": "ccb09e1b01eb6ae5dd0fe9e6108eeb90d2a08ae5",
+      "commit": "0de4c3c45b25a06758c2f28e26f25cc88aa9dfd1",
       "docsPath": "README.md",
       "stages": [
         "mlir",
@@ -63,6 +65,8 @@
       "capabilities": [
         "dsp dialect: add, relu, matmul, conv2d with shape verifiers",
         "dsp → linalg.generic conversion",
+        "dsp.qmatmul: int8 matmul with fixed-point requantization",
+        "Tiling and vectorization from a Transform-dialect schedule generated from a target model, checked bit for bit against the unscheduled code",
         "Differential execution tests via mlir-runner",
         "Compile-time pass timing",
         "SIMD Mojo kernels and a C++ reference, tested against the same values; Mojo kernel benchmark"

@@ -291,7 +291,7 @@ export const PROJECTS = {
       },
       {
         title: "Profiling",
-        text: "Compile-time wall clock per pass, from one run on the capture host. It shows relative cost, not a benchmark. The kernel numbers are the untiled Mojo kernels on one core, the baseline the planned tiling stage has to beat.",
+        text: "Compile-time wall clock per pass, from one run on the capture host. It shows relative cost, not a benchmark. The kernel numbers are the SIMD Mojo kernels on one core. A benchmark of the tiled MLIR kernels against them is not done yet.",
         artifacts: ["nano-pass-timing", "nano-benchmark"],
       },
     ],

@@ -20,6 +20,12 @@ CSS and a few lines of vanilla JS. No framework,
 bundler, WASM or runtime dependency. VizMLIR's interactive app is linked at
 [its own site](https://joepothiboot.github.io/vizmlir/).
 
+The json-schema-mlir section also carries a **trace viewer**: it draws the file
+`schema-translate --emit-trace` writes (source, tokens, AST and the IR before and
+after canonicalization, tied to source ranges) and links each op back to the
+JSON that produced it. The viewer only reads the captured trace; the compiler
+does not run in your browser.
+
 ## 📏 Rules
 
 - **Pinned, never floating.** `manifest.json` pins every project to a full
@@ -69,8 +75,10 @@ artifacts/<id>.json      captured/static/unavailable artifacts per project (gene
 inputs/                  inputs written for this lab (clearly labelled on the site)
 src/model.js             shared data model: JSDoc types + validators
 src/parse.js             parsers for real tool output (diagnostics, IR dumps, timing, lit, vitest, Mojo/C++ tests)
+src/trace.js             validates and indexes a schema-translate --emit-trace file
 src/render.js            HTML rendering (pure functions): the article and its notes
-src/site.css, *.js       the only shipped CSS/JS (notes.js opens notes as dialogs)
+src/render-trace.js      static markup for the trace viewer
+src/site.css, *.js       the only shipped CSS/JS (notes.js opens notes as dialogs, trace-viewer.js drives the trace viewer)
 scripts/capture.sh|.mjs  clone at pin → build → run tools → artifacts/
 scripts/build.mjs        validate everything → dist/
 scripts/update-manifest.mjs, reconcile.mjs, lib-git.mjs   synchronization
@@ -80,7 +88,8 @@ test/                    unit tests + an integration test over the built site
 ### 🧬 Shared data model
 
 All three projects contribute the same artifact kinds, defined in
-[`src/model.js`](src/model.js):
+[`src/model.js`](src/model.js). A `trace` kind (the front end's own trace file,
+kept verbatim) is used by json-schema-mlir only:
 
 | Kind          | Carries                                                                   |
 | ------------- | ------------------------------------------------------------------------- |
@@ -130,3 +139,7 @@ then `bash scripts/capture.sh`.
 - Inputs written for the lab go in `inputs/`; they render as lab files, never as
   project files.
 - Run `npm run check` before opening a PR.
+
+## 📜 License
+
+MIT. See [`LICENSE`](LICENSE).
