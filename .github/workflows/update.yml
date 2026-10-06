@@ -7,7 +7,7 @@ on:
         description: Project to re-pin
         required: true
         type: choice
-        options: [schema-mlir, vizmlir, nano-dsp-mlir]
+        options: [nano-dsp-mlir, vizmlir, schema-mlir]
       ref:
         description: Release tag or full 40-character commit SHA (branches are refused)
         required: true

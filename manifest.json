@@ -7,25 +7,26 @@
   },
   "projects": [
     {
-      "id": "schema-mlir",
-      "name": "json-schema-mlir",
-      "repo": "joepothiboot/json-schema-mlir",
-      "version": "v0.1.0-21-g914691c",
+      "id": "nano-dsp-mlir",
+      "name": "nano-dsp-mlir",
+      "repo": "joepothiboot/nano-dsp-mlir",
+      "version": "v0.1.0-19-g0de4c3c",
       "releaseTag": "v0.1.0",
-      "commit": "914691c49d2d685f26fb67e5ebd08ed968ea4fe7",
+      "commit": "0de4c3c45b25a06758c2f28e26f25cc88aa9dfd1",
       "docsPath": "README.md",
       "stages": [
-        "source",
-        "diagnostics",
-        "mlir"
+        "mlir",
+        "passes",
+        "profiling"
       ],
       "capabilities": [
-        "JSON Schema front end: lexer, parser and importer to schema-dialect IR, with --emit-trace",
-        "schema dialect for JSON Schema string and number constraints",
-        "Constraint-lattice canonicalization (subsumption, fusion)",
-        "Lowering to arith/scf/math/func and the LLVM dialect",
-        "Verifier diagnostics with MLIR source locations",
-        "Mojo library with the same constraint lattice, tested for soundness of meet"
+        "dsp dialect: add, relu, matmul, conv2d with shape verifiers",
+        "dsp → linalg.generic conversion",
+        "dsp.qmatmul: int8 matmul with fixed-point requantization",
+        "Tiling and vectorization from a Transform-dialect schedule generated from a target model, checked bit for bit against the unscheduled code",
+        "Differential execution tests via mlir-runner",
+        "Compile-time pass timing",
+        "SIMD Mojo kernels and a C++ reference, tested against the same values; Mojo kernel benchmark"
       ]
     },
     {
@@ -50,26 +51,25 @@
       ]
     },
     {
-      "id": "nano-dsp-mlir",
-      "name": "nano-dsp-mlir",
-      "repo": "joepothiboot/nano-dsp-mlir",
-      "version": "v0.1.0-19-g0de4c3c",
+      "id": "schema-mlir",
+      "name": "json-schema-mlir",
+      "repo": "joepothiboot/json-schema-mlir",
+      "version": "v0.1.0-21-g914691c",
       "releaseTag": "v0.1.0",
-      "commit": "0de4c3c45b25a06758c2f28e26f25cc88aa9dfd1",
+      "commit": "914691c49d2d685f26fb67e5ebd08ed968ea4fe7",
       "docsPath": "README.md",
       "stages": [
-        "mlir",
-        "passes",
-        "profiling"
+        "source",
+        "diagnostics",
+        "mlir"
       ],
       "capabilities": [
-        "dsp dialect: add, relu, matmul, conv2d with shape verifiers",
-        "dsp → linalg.generic conversion",
-        "dsp.qmatmul: int8 matmul with fixed-point requantization",
-        "Tiling and vectorization from a Transform-dialect schedule generated from a target model, checked bit for bit against the unscheduled code",
-        "Differential execution tests via mlir-runner",
-        "Compile-time pass timing",
-        "SIMD Mojo kernels and a C++ reference, tested against the same values; Mojo kernel benchmark"
+        "JSON Schema front end: lexer, parser and importer to schema-dialect IR, with --emit-trace",
+        "schema dialect for JSON Schema string and number constraints",
+        "Constraint-lattice canonicalization (subsumption, fusion)",
+        "Lowering to arith/scf/math/func and the LLVM dialect",
+        "Verifier diagnostics with MLIR source locations",
+        "Mojo library with the same constraint lattice, tested for soundness of meet"
       ]
     }
   ]

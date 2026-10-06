@@ -81,7 +81,7 @@ test("applyPin re-pins one project and refuses non-SHA pins", () => {
 
   assert.equal(
     next.projects.find((p) => p.id === "nano-dsp-mlir")?.commit,
-    manifest.projects[2].commit,
+    manifest.projects.find((p) => p.id === "nano-dsp-mlir")?.commit,
   );
 
   assert.throws(

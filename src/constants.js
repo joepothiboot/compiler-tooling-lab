@@ -15,9 +15,9 @@ export const STAGE_LABEL = {
 };
 
 export const CHAIN = /** @type {const} */ ([
-  "schema-mlir",
-  "vizmlir",
   "nano-dsp-mlir",
+  "vizmlir",
+  "schema-mlir",
 ]);
 
 export const ARTIFACT_KINDS = /** @type {const} */ ([
