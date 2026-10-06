@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { CHAIN, STAGES } from "../src/constants.js";
 import {
-  CHAIN,
-  STAGES,
   validateArtifact,
   validateArtifactFile,
   validateManifest,
 } from "../src/model.js";
 
 const SHA = "a".repeat(40);
+
 const project = (
   /** @type {string} */ id,
   /** @type {import("../src/model.js").Stage[]} */ stages,
@@ -23,6 +23,7 @@ const project = (
   stages,
   capabilities: ["does a thing"],
 });
+
 const goodManifest = () => ({
   schemaVersion: 1,
   toolchain: { llvm: "23.1.1", python: "3.11", node: "22" },
@@ -41,6 +42,7 @@ test("manifest rejects branch pins, short SHAs and wrong chain order", () => {
   const m = goodManifest();
   m.projects[0].commit = "main";
   m.projects[1].commit = "46e767b";
+
   assert.equal(
     validateManifest(m).filter((e) => e.includes("40-hex")).length,
     2,
@@ -54,9 +56,11 @@ test("manifest rejects branch pins, short SHAs and wrong chain order", () => {
 test("manifest requires every pipeline stage to be covered", () => {
   const m = goodManifest();
   m.projects[2].stages = ["mlir"];
+
   assert.deepEqual(validateManifest(m), [
     'no project covers stage "profiling"',
   ]);
+
   assert.equal(STAGES.length, 5);
 });
 
@@ -68,16 +72,19 @@ test("captured artifacts must record their command; static ones their path", () 
     language: "mlir",
     text: "",
   };
+
   assert.ok(
     validateArtifact({ ...base, provenance: { mode: "captured" } }).some((e) =>
       e.includes("command"),
     ),
   );
+
   assert.ok(
     validateArtifact({ ...base, provenance: { mode: "static" } }).some((e) =>
       e.includes("source path"),
     ),
   );
+
   assert.deepEqual(
     validateArtifact({
       ...base,
@@ -97,6 +104,7 @@ test("unavailable artifacts need a reason and nothing else", () => {
     }),
     [],
   );
+
   assert.ok(
     validateArtifact({
       id: "x",
@@ -117,16 +125,19 @@ test("diagnostics validate severities and 1-based locations", () => {
     entries: [{ severity: "error", message: "bad", location: loc }],
     provenance: { mode: "captured", command: "x-opt a.mlir" },
   });
+
   assert.deepEqual(
     validateArtifact(d({ file: "a.mlir", line: 2, column: 8 })),
     [],
   );
+
   assert.deepEqual(validateArtifact(d(null)), []);
   assert.ok(validateArtifact(d({ file: "a.mlir", line: 0 })).length);
 });
 
 test("artifact files must match the manifest pin and have unique ids", () => {
   const p = goodManifest().projects[0];
+
   const a = {
     id: "s",
     kind: "source",
@@ -135,18 +146,22 @@ test("artifact files must match the manifest pin and have unique ids", () => {
     text: "",
     provenance: { mode: "static", path: "f" },
   };
+
   const file = {
     project: p.id,
     commit: SHA,
     capture: { capturedAt: "2026-01-01", host: "linux-x64" },
     artifacts: [a],
   };
+
   assert.deepEqual(validateArtifactFile(file, p), []);
+
   assert.ok(
     validateArtifactFile({ ...file, commit: "b".repeat(40) }, p).some((e) =>
       e.includes("re-run capture"),
     ),
   );
+
   assert.ok(
     validateArtifactFile({ ...file, artifacts: [a, a] }, p).some((e) =>
       e.includes("duplicate"),

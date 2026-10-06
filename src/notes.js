@@ -1,13 +1,12 @@
-// Progressive enhancement: links to a note (#note-…) open it in a scrollable
-// modal dialog over the article instead of jumping to the appendix. Without
-// JS the appendix stays visible and the links are ordinary in-page anchors.
-
 const appendix = document.getElementById("notes");
+
 if (appendix && typeof HTMLDialogElement === "function") {
   const dialog = document.createElement("dialog");
   dialog.className = "note-dialog";
+
   const bar = document.createElement("div");
   bar.className = "note-bar";
+
   const close = document.createElement("button");
   close.type = "button";
   close.className = "note-close";
@@ -15,13 +14,13 @@ if (appendix && typeof HTMLDialogElement === "function") {
   close.innerHTML = '<span aria-hidden="true">×</span>';
   close.addEventListener("click", () => dialog.close());
   bar.append(close);
+
   const body = document.createElement("div");
   body.className = "note-body";
   dialog.append(bar, body);
   document.body.append(dialog);
   appendix.hidden = true;
 
-  /** Where the open note came from, so it can go back on close. */
   const home = document.createComment("note");
   /** @type {HTMLElement | null} */
   let trigger = null;
@@ -29,6 +28,7 @@ if (appendix && typeof HTMLDialogElement === "function") {
   const noteFor = (/** @type {string} */ hash) => {
     const id = decodeURIComponent(hash.slice(1));
     const n = id ? document.getElementById(id) : null;
+
     return n?.classList.contains("note") ? n : null;
   };
 
@@ -55,7 +55,7 @@ if (appendix && typeof HTMLDialogElement === "function") {
     trigger?.focus({ preventScroll: true });
     trigger = null;
   });
-  // A click on the backdrop lands on the dialog itself; content sits inside.
+
   dialog.addEventListener("click", (e) => {
     if (e.target === dialog) dialog.close();
   });
@@ -63,6 +63,7 @@ if (appendix && typeof HTMLDialogElement === "function") {
   document.addEventListener("click", (e) => {
     const a = /** @type {HTMLElement} */ (e.target).closest?.("a[href^='#']");
     if (!a || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey) return;
+
     const note = noteFor(/** @type {string} */ (a.getAttribute("href")));
     if (!note) return;
     e.preventDefault();
@@ -74,9 +75,9 @@ if (appendix && typeof HTMLDialogElement === "function") {
     const note = noteFor(location.hash);
     if (note) open(note);
   };
+
   addEventListener("hashchange", fromHash);
   fromHash();
 }
 
-// Loaded as an ES module so each script keeps its own scope.
 export {};

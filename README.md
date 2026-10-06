@@ -120,7 +120,8 @@ FileCheck, `mlir-runner` and `lit`), Python 3.11, Node, Rust and
 project at its pin into `$WORK_DIR`, which must not contain spaces because
 lit's `%s` substitution breaks on them. It then builds each project with the
 project's own scripts and runs `scripts/capture.mjs`. Set `REPO_BASE=<dir>` to
-clone from local checkouts instead of GitHub.
+clone from local checkouts instead of GitHub, and `LLVM_PREFIX=<dir>` to use an
+LLVM install other than Homebrew's (or `/usr/lib/llvm-<major>` on Linux).
 
 ## 🏗️ Architecture
 
@@ -129,13 +130,16 @@ manifest.json            pins: repo, version, commit, stages, capabilities
 content/projects.js      article text; every behavioural claim references an artifact id
 artifacts/<id>.json      captured/static/unavailable artifacts per project (generated)
 inputs/                  inputs written for this lab (clearly labelled on the site)
+src/constants.js         shared constants (stages, artifact kinds, storage keys, timings)
 src/model.js             shared data model: JSDoc types + validators
 src/parse.js             parsers for real tool output (diagnostics, IR dumps, timing, lit, vitest, Mojo/C++ tests)
 src/trace.js             validates and indexes a schema-translate --emit-trace file
 src/render.js            HTML rendering (pure functions): the article and its notes
 src/render-trace.js      static markup for the trace viewer
-src/site.css, *.js       the only shipped CSS/JS (notes.js opens notes as dialogs, trace-viewer.js drives the trace viewer)
+src/styles/*.css         stylesheets, concatenated into assets/site.css by the build
+src/*.js                 the shipped JS (notes.js opens notes as dialogs, terminal.js replays captures, trace-viewer.js drives the trace viewer)
 scripts/capture.sh|.mjs  clone at pin → build → run tools → artifacts/
+scripts/capture/         one capture module per project, plus shared helpers
 scripts/build.mjs        validate everything → dist/
 scripts/update-manifest.mjs, reconcile.mjs, lib-git.mjs   synchronization
 test/                    unit tests + an integration test over the built site
@@ -166,7 +170,7 @@ captured from json-schema-mlir.
 | -------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------- |
 | [`ci.yml`](.github/workflows/ci.yml)               | pull requests                            | format check, typecheck, tests, build                                     |
 | [`deploy.yml`](.github/workflows/deploy.yml)       | push to `main`, manual                   | CI, then builds pinned VizMLIR and the site, then deploys to GitHub Pages |
-| [`update.yml`](.github/workflows/update.yml)       | manual, `repository_dispatch`, reconcile | re-pin → re-capture all artifacts → check → open an integration PR        |
+| [`update.yml`](.github/workflows/update.yml)       | manual, `repository_dispatch`, reconcile | re-pin → re-capture all artifacts → check → push to `main`                |
 | [`reconcile.yml`](.github/workflows/reconcile.yml) | daily schedule, manual                   | flags unreachable pins/stale artifacts, dispatches missed releases        |
 
 To have a project announce a release, add a step to its release workflow
@@ -180,8 +184,13 @@ curl -fsS -X POST \
   -d '{"event_type":"project-release","client_payload":{"project":"vizmlir","ref":"v0.3.0"}}'
 ```
 
-Set the `PIN_UPDATE_TOKEN` secret (PAT or GitHub App token) so integration PRs
-trigger CI. PRs opened with the default `GITHUB_TOKEN` do not.
+vizmlir (`release.yml`) and nano-dsp-mlir (`ci.yml`) already do this after
+their tests pass on a `v*` tag.
+
+The update commits straight to `main`, and refuses to if the new capture has
+more `unavailable` artifacts than before. Set the `PIN_UPDATE_TOKEN` secret
+(PAT or GitHub App token, allowed to push to `main`) so that push triggers
+`deploy.yml`. Pushes made with the default `GITHUB_TOKEN` do not.
 
 Manually: `node scripts/update-manifest.mjs --project <id> --ref <tag|sha>`,
 then `bash scripts/capture.sh`.
