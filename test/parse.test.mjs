@@ -1,4 +1,3 @@
-// Parsers are tested against output copied verbatim from real tool runs.
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
@@ -16,6 +15,7 @@ test("parseDiagnostics reads MLIR file:line:col diagnostics and notes", () => {
   %v = schema.validate_string %doc { min_length = 8 : i64, max_length = 3 : i64 } : !schema.value
        ^
 bad.mlir:2:8: note: see current operation: %0 = "schema.validate_string"(%arg0) <{max_length = 3 : i64, min_length = 8 : i64}> : (!schema.value) -> i1`;
+
   const d = parseDiagnostics(out);
   assert.equal(d.length, 2);
   assert.deepEqual(d[0].location, { file: "bad.mlir", line: 2, column: 8 });
@@ -32,7 +32,9 @@ module {
 module attributes {schema.string_pool = []} {
 }
 `;
+
   const dumps = parseIRDumps(out);
+
   assert.deepEqual(
     dumps.map((d) => d.pass),
     [
@@ -40,6 +42,7 @@ module attributes {schema.string_pool = []} {
       "LowerSchemaToStandardPass (lower-schema-to-std)",
     ],
   );
+
   assert.equal(dumps[0].text, "module {\n}");
 });
 
@@ -51,9 +54,11 @@ test("parseTiming reads the wall-time table with nesting", () => {
     0.0003 (  1.4%)  'func.func' Pipeline
     0.0003 (  1.4%)    (anonymous namespace)::SchemaCanonicalizerPass
     0.0243 (100.0%)  Total`;
+
   const t = parseTiming(out);
   assert.equal(t.total, 0.0243);
   assert.equal(t.entries.length, 3);
+
   assert.deepEqual(t.entries[2], {
     name: "SchemaCanonicalizerPass",
     value: 0.0003,
@@ -71,6 +76,7 @@ FAIL: JSON-SCHEMA-MLIR :: Dialect/Schema/schema-canonicalize.mlir (3 of 3)
 Total Discovered Tests: 3
   Passed: 2 (66.67%)
   Failed: 1 (33.33%)`;
+
   const r = parseLit(out);
   assert.equal(r.passed, 2);
   assert.equal(r.failed, 1);
@@ -83,11 +89,14 @@ test("parseVitest reads the Tests summary line", () => {
     "      Tests  136 passed (136)",
     "   Start at  21:36:01",
   ].join("\n");
+
   const r = parseVitest(out);
   assert.deepEqual([r.passed, r.failed, r.skipped], [136, 0, 0]);
+
   const failed = parseVitest(
     "      Tests  2 failed | 133 passed | 1 skipped (136)",
   );
+
   assert.deepEqual([failed.passed, failed.failed, failed.skipped], [133, 2, 1]);
 });
 
@@ -96,11 +105,14 @@ test("parseMojoTests counts a full run and treats an abort as a failure", () => 
     "✨ Pixi task (test-mojo): mojo run -I mojo mojo/tests/test_kernels.mojo\nnanodsp: 12 tests passed\n",
     0,
   );
+
   assert.deepEqual([ok.passed, ok.failed], [12, 0]);
+
   const aborted = parseMojoTests(
     "Unhandled exception caught during execution: At mojo/tests/test_kernels.mojo:41:21: AssertionError: `left == right` comparison failed:",
     1,
   );
+
   assert.deepEqual([aborted.passed, aborted.failed], [0, 1]);
 });
 
@@ -108,6 +120,7 @@ test("parsePassFailLines counts PASS and FAIL lines only", () => {
   const r = parsePassFailLines(
     "✨ Pixi task (test-reference): c++ ...\nPASS add\nPASS relu\nFAIL matmul\n",
   );
+
   assert.deepEqual([r.passed, r.failed], [2, 1]);
   assert.equal(r.log, "PASS add\nPASS relu\nFAIL matmul");
 });

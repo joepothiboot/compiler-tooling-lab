@@ -1,35 +1,30 @@
-// Hand-written page text. Every claim about behaviour points at an artifact id
-// (artifacts/*.json) so the build can check it exists and render its provenance.
-// `{commit}` in `run` is replaced with the manifest pin at build time.
-
 /**
  * @typedef {object} TourStep
  * @property {string} title
- * @property {string} text          Plain text; rendered escaped.
- * @property {string[]} [artifacts] Artifact ids rendered after the text.
- * @property {string} [timeline]    Artifact-id prefix whose pass events render as a table.
- * @property {boolean} [trace]      Adds a link to the project's trace viewer note.
+ * @property {string} text
+ * @property {string[]} [artifacts]
+ * @property {string} [timeline]
+ * @property {boolean} [trace]
  */
 
 /**
  * @typedef {object} ProjectContent
- * @property {string} summary       One line for cards.
+ * @property {string} summary
  * @property {string[]} purpose
- * @property {string} [status]      Shown as a callout when the project has caveats.
+ * @property {string} [status]
  * @property {{ text: string, href?: string }[]} [statusLinks]
- * @property {{ name: string, path: string, text: string }[]} architecture  Ordered components; path is repo-relative.
- * @property {string[]} run         Shell lines.
+ * @property {{ name: string, path: string, text: string }[]} architecture
+ * @property {string[]} run
  * @property {string} runNote
- * @property {string[]} tests       Artifact ids of test-run (or unavailable) artifacts.
- * @property {string[]} benchmarks  Artifact ids of profile (or unavailable) artifacts.
+ * @property {string[]} tests
+ * @property {string[]} benchmarks
  * @property {string} quickDemo
- * @property {string} thumb         Artifact id drawn as the list thumbnail.
- * @property {string} [trace]       Artifact id of a `trace` artifact; adds the trace viewer note.
- * @property {string[]} [traceIntro] Paragraphs of prose above the viewer.
+ * @property {string} thumb
+ * @property {string} [trace]
+ * @property {string[]} [traceIntro]
  * @property {TourStep[]} tour
  */
 
-/** One-line description per pipeline stage, for the landing page. */
 export const STAGE_TEXT = {
   source: "JSON Schema constraints as schema-dialect IR.",
   diagnostics: "Verifier errors with file, line and column.",
@@ -254,7 +249,7 @@ export const PROJECTS = {
     runNote:
       "Needs LLVM/MLIR with mlir-runner, FileCheck and lit. Clone into a path without spaces. The Mojo and C++ steps need only pixi, which installs the pinned Mojo.",
     tests: ["nano-tests", "nano-mojo-tests", "nano-reference-tests"],
-    benchmarks: ["nano-pass-timing", "nano-benchmark"],
+    benchmarks: ["nano-pass-timing", "nano-benchmark", "nano-gpu-results"],
     quickDemo:
       "Follow relu(conv2d(image) + bias) from the dsp dialect through 19 passes to the LLVM dialect, execute it, and see where compile time goes.",
     thumb: "nano-pass-timing",

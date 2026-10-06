@@ -1,6 +1,3 @@
-# Daily check that pins are still reachable, artifacts match the manifest, and
-# no newer release has been missed (e.g. a repository_dispatch that never fired).
-# Newer releases are handed to the update workflow; problems fail this job.
 name: Reconcile pins
 
 on:

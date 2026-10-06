@@ -1,0 +1,332 @@
+section.project {
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+  margin: 2rem 0;
+  scroll-margin-top: 1rem;
+}
+section.project h3 {
+  margin: 0 0 0.2rem;
+  font-size: 1.1rem;
+}
+.entry p {
+  margin: 0.2rem 0;
+}
+.venue {
+  font-size: 0.95rem;
+}
+.links {
+  font: 0.9rem/1.5 var(--sans);
+  color: var(--muted);
+}
+.thumb {
+  display: block;
+  position: relative;
+  height: 8rem;
+  overflow: hidden;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--fg);
+  text-decoration: none;
+}
+.thumb::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 2rem;
+  background: linear-gradient(transparent, var(--panel));
+}
+.thumb-code {
+  display: block;
+  padding: 0.5rem 0.6rem;
+  font: 0.58rem/1.45 var(--mono);
+  white-space: pre;
+}
+.thumb-code .d-added {
+  color: var(--ok);
+}
+.thumb-code .d-removed {
+  color: var(--bad);
+}
+.thumb-code .d-changed {
+  color: var(--muted);
+}
+.thumb-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 100%;
+  padding: 0.75rem 0.6rem 0.6rem;
+}
+.thumb-bars span {
+  flex: 1;
+  height: var(--h);
+  min-height: 1px;
+  background: var(--plot);
+}
+.thumb:has(.thumb-bars)::after {
+  display: none;
+}
+.note h4 {
+  margin: 2rem 0 0.25rem;
+}
+.callout {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--na-fg);
+  background: var(--na-bg);
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+}
+.callout p {
+  margin: 0.25rem 0;
+}
+
+.appendix {
+  margin-top: 4rem;
+  border-top: 1.5px solid var(--rule);
+}
+.note {
+  margin: 2.5rem 0;
+}
+.note h3 {
+  margin-top: 0.1rem;
+}
+.note-from {
+  margin: 0;
+  font: 600 0.75rem var(--sans);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.note ul.caps {
+  padding-left: 1.25rem;
+}
+.note ol.arch {
+  list-style: none;
+  padding: 0;
+}
+.note ol.arch li {
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--line);
+}
+.note ol.arch h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+.note ol.arch p {
+  margin: 0.2rem 0 0;
+}
+.note-dialog {
+  width: min(52rem, calc(100% - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 48px);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+.note-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+.note-dialog::backdrop {
+  background: rgba(20, 20, 18, 0.55);
+}
+.note-bar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.4rem 0.5rem 0;
+}
+.note-close {
+  width: 2.25rem;
+  height: 2.25rem;
+  font: 1.5rem/1 var(--sans);
+  color: var(--muted);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.note-close:hover {
+  color: var(--fg);
+  border-color: var(--line);
+}
+.note-body {
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 0 1.75rem 1.75rem;
+}
+.note-body .note {
+  margin: 0;
+}
+body:has(.note-dialog[open]) {
+  overflow: hidden;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge::before {
+  content: "";
+  width: 0.6em;
+  height: 0.6em;
+  border-radius: 50%;
+  background: currentColor;
+}
+.badge.captured {
+  color: var(--captured-fg);
+}
+.badge.static {
+  color: var(--static-fg);
+}
+.badge.unavailable {
+  color: var(--na-fg);
+}
+.badge.unavailable::before {
+  background: none;
+  border: 1.5px solid currentColor;
+}
+
+.artifact {
+  margin: 1.75rem 0;
+}
+.artifact-title {
+  font-size: 0.95rem;
+  margin: 0 0 0.5rem;
+}
+.prov {
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0.5rem 0 0;
+}
+div.unavailable {
+  padding: 0.6rem 0.9rem;
+  border: 1px dashed var(--na-fg);
+  font-size: 0.95rem;
+}
+pre {
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 0.75rem;
+  overflow: auto;
+  max-height: 32rem;
+  font: 0.8rem/1.5 var(--mono);
+  position: relative;
+}
+pre code {
+  font-size: inherit;
+  overflow-wrap: normal;
+}
+details {
+  margin: 0.5rem 0;
+}
+summary {
+  cursor: pointer;
+  color: var(--link);
+  font-size: 0.95rem;
+}
+.copy {
+  display: block;
+  font: 0.8rem var(--sans);
+  margin: 0.5rem 0 -0.25rem auto;
+  padding: 0.05rem 0.5rem;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+ul.diags,
+ul.diff,
+ul.expected {
+  list-style: none;
+  padding: 0;
+}
+ul.diags li {
+  margin: 0.35rem 0;
+  font-size: 0.95rem;
+}
+.sev {
+  font: 600 0.75rem var(--mono);
+  text-transform: uppercase;
+}
+.sev-error {
+  color: var(--bad);
+}
+.sev-note,
+.sev-remark {
+  color: var(--muted);
+}
+.d-added code {
+  color: var(--ok);
+}
+.d-removed code {
+  color: var(--bad);
+}
+.ok {
+  color: var(--ok);
+}
+.bad {
+  color: var(--bad);
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.9rem;
+  border-bottom: 1.5px solid var(--rule);
+}
+caption {
+  text-align: left;
+  padding-bottom: 0.4rem;
+  font-size: 0.9rem;
+}
+thead tr {
+  border-top: 1.5px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+th {
+  font-weight: 600;
+}
+th,
+td {
+  text-align: left;
+  padding: 0.25rem 0.5rem;
+}
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+td.plot {
+  width: 30%;
+}
+.bar {
+  display: block;
+  height: 0.55rem;
+  width: var(--w);
+  background: var(--plot);
+}
+.depth-1 {
+  padding-left: 1.5rem;
+}
+.depth-2 {
+  padding-left: 2.5rem;
+}
+.depth-3 {
+  padding-left: 3.5rem;
+}

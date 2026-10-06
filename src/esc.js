@@ -1,4 +1,4 @@
-/** HTML-escapes text for element content and quoted attributes. @param {unknown} s */
+/** @param {unknown} s */
 export const esc = (s) =>
   String(s).replace(
     /[&<>"']/g,

@@ -1,9 +1,7 @@
-// Checks the committed manifest and artifacts: pins, chain, and that every
-// artifact file was captured at the pinned commit.
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { test } from "node:test";
-import { CHAIN } from "../src/model.js";
+import { CHAIN } from "../src/constants.js";
 import { loadContext } from "../scripts/build.mjs";
 import { applyPin, resolveRef } from "../scripts/update-manifest.mjs";
 
@@ -13,6 +11,7 @@ const manifest = JSON.parse(
 
 test("manifest, content and artifacts load and cross-validate", () => {
   const ctx = loadContext();
+
   assert.deepEqual(
     ctx.manifest.projects.map((p) => p.id),
     [...CHAIN],
@@ -22,16 +21,20 @@ test("manifest, content and artifacts load and cross-validate", () => {
 test("every project is pinned to a full SHA with a describe-style version", () => {
   for (const p of manifest.projects) {
     assert.match(p.commit, /^[0-9a-f]{40}$/, p.id);
+
     const suffix = p.commit.slice(0, 7);
+
     assert.ok(
       p.version === p.releaseTag || p.version.endsWith(`g${suffix}`),
       `${p.id}: version ${p.version} does not describe ${suffix}`,
     );
-    if (p.releaseTag)
+
+    if (p.releaseTag) {
       assert.ok(
         p.version.startsWith(p.releaseTag),
         `${p.id}: version must start with its release tag`,
       );
+    }
   }
 });
 
@@ -43,6 +46,7 @@ test("each artifact file records where and with what it was captured", () => {
         "utf8",
       ),
     );
+
     assert.equal(f.commit, p.commit);
     assert.ok(f.capture.toolchain.llvm && f.capture.toolchain.node, p.id);
   }
@@ -54,6 +58,7 @@ test("captured output never leaks absolute capture paths", () => {
       new URL(`../artifacts/${p.id}.json`, import.meta.url),
       "utf8",
     );
+
     assert.doesNotMatch(
       text,
       /\/(Users|home|private|var\/folders|tmp)\//,
@@ -68,14 +73,17 @@ test("applyPin re-pins one project and refuses non-SHA pins", () => {
     version: "v9.9.9",
     releaseTag: "v9.9.9",
   });
+
   assert.equal(
     next.projects.find((p) => p.id === "vizmlir")?.commit,
     "b".repeat(40),
   );
+
   assert.equal(
     next.projects.find((p) => p.id === "nano-dsp-mlir")?.commit,
     manifest.projects[2].commit,
   );
+
   assert.throws(
     () =>
       applyPin(manifest, "vizmlir", {
@@ -85,6 +93,7 @@ test("applyPin re-pins one project and refuses non-SHA pins", () => {
       }),
     /non-SHA/,
   );
+
   assert.throws(
     () =>
       applyPin(manifest, "nope", {

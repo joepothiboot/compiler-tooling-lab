@@ -1244,6 +1244,15 @@
         "mode": "captured",
         "command": "pixi run bench"
       }
+    },
+    {
+      "id": "nano-gpu-results",
+      "kind": "execution",
+      "title": "GPU kernel throughput (committed results)",
+      "provenance": {
+        "mode": "unavailable",
+        "reason": "benchmarks/results does not exist at the pinned commit."
+      }
     }
   ]
 }
